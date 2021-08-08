@@ -1,3 +1,0 @@
-[submodule "dmcontrol"]
-	path = markov_abstr/dmcontrol
-	url = ./dmcontrol/

@@ -1,26 +1,13 @@
-# Markov State Abstractions
+# visgrid
 
-Learning Markov State Abstractions for Deep Reinforcement Learning
-https://arxiv.org/abs/2106.04379
+RL environments for quickly running image-based grid-world experiments.
 
 ### Installation
 
-Download the repo:
+Download the repo and install the dependencies:
 ```
-git clone github.com/camall3n/markov-state-abstractions.git
-```
-
-Install the dependencies:
-```
-cd markov-state-abstractions
-git submodule init
-git submodule update
+cd visgrid
 python3 -m venv venv
-. venv/bin/activate
+source venv/bin/activate
 pip install -r requirements.txt
 ```
-
-### Experiments
-
-- Visual gridworld: `markov_abstr/visgrid/`
-- DeepMind Control: `markov_abstr/dmcontrol/`
