@@ -27,6 +27,8 @@ class BaseGrid:
         self._rows = rows
         self._cols = cols
 
+        self.wall_color = 'C0'
+
         # Add rows and columns for walls between cells
         self._grid = np.ones([rows * 2 + 1, cols * 2 + 1], dtype=grid_type)
         self._contents = np.empty([rows * 2 + 1, cols * 2 + 1], dtype=np.object)
@@ -44,7 +46,7 @@ class BaseGrid:
     def contents(self, row, col):
         return self._contents[row // 2, col // 2]
 
-    def plot(self, ax=None, draw_bg_grid=True):
+    def plot(self, ax=None, draw_bg_grid=True, linewidth_multiplier=1.0):
         scale = 3 / 5
         rowscale = scale * self._rows
         colscale = scale * self._cols
@@ -61,9 +63,17 @@ class BaseGrid:
         col_range = np.linspace(0, self._cols, self._cols + 1)
         if draw_bg_grid:
             for row in range(self._rows):
-                ax.vlines(col_range, row, row + 1, colors='lightgray', linewidth=0.5)
+                ax.vlines(col_range,
+                          row,
+                          row + 1,
+                          colors='lightgray',
+                          linewidth=0.5 * linewidth_multiplier)
             for col in range(self._cols):
-                ax.hlines(row_range, col, col + 1, colors='lightgray', linewidth=0.5)
+                ax.hlines(row_range,
+                          col,
+                          col + 1,
+                          colors='lightgray',
+                          linewidth=0.5 * linewidth_multiplier)
         else:
             ax.set_xlim([0, self._cols])
             ax.set_ylim([0, self._rows])
@@ -72,9 +82,17 @@ class BaseGrid:
         v_walls = self._grid[:, ::2][1::2, :]
         h_walls = self._grid[::2, :][:, 1::2].transpose()
         for row in range(self._rows):
-            ax.vlines(col_range[v_walls[row] == 1], row, row + 1)
+            ax.vlines(col_range[v_walls[row] == 1],
+                      row,
+                      row + 1,
+                      colors=self.wall_color,
+                      linewidth=1.0 * linewidth_multiplier)
         for col in range(self._cols):
-            ax.hlines(row_range[h_walls[col] == 1], col, col + 1)
+            ax.hlines(row_range[h_walls[col] == 1],
+                      col,
+                      col + 1,
+                      colors=self.wall_color,
+                      linewidth=1.0 * linewidth_multiplier)
         return ax
 
     def has_wall(self, position, offset):

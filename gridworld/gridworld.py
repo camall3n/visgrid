@@ -28,6 +28,9 @@ class GridWorld(grid.BaseGrid):
         self.goal.position = self.get_random_position()
         self.reset_agent()
 
+    def check_goal(self):
+        return np.all(self.agent.position == self.goal.position)
+
     def step(self, action):
         assert (action in range(4))
         direction = self.action_map[action]
@@ -35,7 +38,7 @@ class GridWorld(grid.BaseGrid):
             self.agent.position += direction
         s = self.get_state()
         if self.goal:
-            at_goal = np.all(self.agent.position == self.goal.position)
+            at_goal = self.check_goal(s)
             r = 0 if at_goal else -1
             done = True if at_goal else False
         else:
@@ -51,12 +54,12 @@ class GridWorld(grid.BaseGrid):
     def get_state(self):
         return np.copy(self.agent.position)
 
-    def plot(self, ax=None):
-        ax = super().plot(ax)
+    def plot(self, ax=None, draw_bg_grid=True, linewidth_multiplier=1.0, plot_goal=True):
+        ax = super().plot(ax, draw_bg_grid=draw_bg_grid, linewidth_multiplier=linewidth_multiplier)
         if self.agent:
-            self.agent.plot(ax)
-        if self.goal:
-            self.goal.plot(ax)
+            self.agent.plot(ax, linewidth_multiplier=linewidth_multiplier)
+        if self.goal and plot_goal:
+            self.goal.plot(ax, linewidth_multiplier=linewidth_multiplier)
         return ax
 
 class TestWorld(GridWorld):
@@ -170,7 +173,9 @@ class MazeWorld(GridWorld):
             env.load(maze_file)
         except IOError as e:
             print()
-            print('Could not find standardized {rows}x{cols} maze file for seed {seed}. Maybe it needs to be generated?'.format(rows=rows, cols=cols, seed=seed))
+            print(
+                'Could not find standardized {rows}x{cols} maze file for seed {seed}. Maybe it needs to be generated?'
+                .format(rows=rows, cols=cols, seed=seed))
             print()
             raise e
         return env

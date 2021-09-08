@@ -1,4 +1,4 @@
-%matplotlib inline
+# %matplotlib inline
 import random
 from visgrid.taxi.taxi import *
 from visgrid.taxi.skills import *

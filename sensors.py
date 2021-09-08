@@ -11,6 +11,20 @@ class NullSensor:
     def observe(self, s):
         return s
 
+class MultiplySensor:
+    def __init__(self, scale):
+        self.scale = scale
+
+    def observe(self, s):
+        return s * self.scale
+
+class AsTypeSensor:
+    def __init__(self, dtype):
+        self.dtype = dtype
+
+    def observe(self, s):
+        return s.astype(self.dtype)
+
 class RearrangeXYPositionsSensor:
     """Rearrange discrete x-y positions to break smoothness
     """
@@ -68,13 +82,15 @@ class ImageSensor:
         if s.ndim == 1:
             s = np.expand_dims(s, axis=0)
         n_samples = s.shape[0]
-        digitized = scipy.stats.binned_statistic_2d(s[:, 0],
-                                                    s[:, 1],
-                                                    np.arange(n_samples),
-                                                    statistic='count',
-                                                    bins=self.size,
-                                                    range=self.range,
-                                                    expand_binnumbers=True)
+        digitized = scipy.stats.binned_statistic_2d(
+                s[:, 0],
+                s[:, 1],
+                np.arange(n_samples),
+                statistic='count',
+                bins=self.size,
+                range=self.range,
+                expand_binnumbers=True,
+            )
         digitized = digitized[-1].transpose()
         x = np.zeros([n_samples, self.size[0], self.size[1]])
         for i in range(n_samples):
