@@ -53,13 +53,13 @@ class BaseTaxi(GridWorld):
         self.goal = None
         self.wall_color = 'black'
 
-    def reset(self, goal=True):
         # Place depots
         self.depots = dict()
         for name in self.depot_names:
             self.depots[name] = Depot(color=name)
             self.depots[name].position = self.depot_locs[name]
 
+    def reset(self, goal=True, explore=False):
         # Place passengers and taxi
         start_depots = list(self.depot_names)
         passenger_colors = copy.deepcopy(start_depots)
@@ -84,6 +84,26 @@ class BaseTaxi(GridWorld):
             self.goal = TaxiGoal(self.passenger_goals)
         else:
             self.goal = None
+
+        if explore:
+            # Fully randomize agent position
+            self.agent.position = self.get_random_position()
+
+            # Fully randomize passenger positions (without overlap)
+            passenger_positions = np.stack(
+                [self.get_random_position() for _ in range(len(self.passengers))], axis=0)
+            while len(np.unique(passenger_positions, axis=0)) < len(passenger_positions):
+                passenger_positions = np.stack(
+                    [self.get_random_position() for _ in range(len(self.passengers))], axis=0)
+            for i, p in enumerate(self.passengers):
+                p.position = passenger_positions[i]
+
+            # Randomly decide if one passenger should be in the taxi
+            if random.random() > 0.5:
+                # If so, randomly choose which passenger
+                p = random.choice(self.passengers)
+                p.position = self.agent.position
+                p.intaxi = True
 
         return self.get_state()
 
@@ -126,7 +146,7 @@ class BaseTaxi(GridWorld):
         image[2:-2, 2:-2, :] = image_content
 
         # flip image vertically
-        image = image[::-1,:,:]
+        image = image[::-1, :, :]
 
         return image
 
@@ -212,8 +232,8 @@ class Taxi5x5(BaseTaxi, TaxiGrid5x5):
         self.reset()
 
 class VisTaxi5x5(Taxi5x5):
-    def reset(self, goal=True):
-        super().reset(goal=goal)
+    def reset(self, goal=True, explore=False):
+        super().reset(goal=goal, explore=explore)
         return self.render()
 
     def step(self, action):
