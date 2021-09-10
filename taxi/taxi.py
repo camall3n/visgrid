@@ -185,21 +185,21 @@ class BaseTaxi(GridWorld):
 
     def get_state(self):
         state = []
-        x, y = self.agent.position
-        state.extend([x, y])
+        row, col = self.agent.position
+        state.extend([row, col])
         for p in self.passengers:
-            x, y = p.position
+            row, col = p.position
             intaxi = p.intaxi
-            state.extend([x, y, intaxi])
+            state.extend([row, col, intaxi])
         return np.asarray(state, dtype=int)
 
     def get_goal_state(self):
         state = []
         for p in self.passengers:
             goal_name = p.color
-            x, y = self.depots[goal_name].position
+            row, col = self.depots[goal_name].position
             intaxi = False
-            state.extend([x, y, intaxi])
+            state.extend([row, col, intaxi])
         return np.asarray(state, dtype=int)
 
     def check_goal(self, state):
