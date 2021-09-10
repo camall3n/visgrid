@@ -25,6 +25,15 @@ class AsTypeSensor:
     def observe(self, s):
         return s.astype(self.dtype)
 
+class ClipSensor:
+    def __init__(self, limit_min=None, limit_max=None, rescale=False):
+        self.limit_min = limit_min
+        self.limit_max = limit_max
+        self.rescale = rescale
+
+    def observe(self, s):
+        return np.clip(s, self.limit_min, self.limit_max)
+
 class RearrangeXYPositionsSensor:
     """Rearrange discrete x-y positions to break smoothness
     """
@@ -83,14 +92,14 @@ class ImageSensor:
             s = np.expand_dims(s, axis=0)
         n_samples = s.shape[0]
         digitized = scipy.stats.binned_statistic_2d(
-                s[:, 0],
-                s[:, 1],
-                np.arange(n_samples),
-                statistic='count',
-                bins=self.size,
-                range=self.range,
-                expand_binnumbers=True,
-            )
+            s[:, 0],
+            s[:, 1],
+            np.arange(n_samples),
+            statistic='count',
+            bins=self.size,
+            range=self.range,
+            expand_binnumbers=True,
+        )
         digitized = digitized[-1].transpose()
         x = np.zeros([n_samples, self.size[0], self.size[1]])
         for i in range(n_samples):
