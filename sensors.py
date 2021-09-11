@@ -108,6 +108,14 @@ class ImageSensor:
             x = x[0, :, :]
         return x
 
+class MoveAxisSensor:
+    def __init__(self, source, destination):
+        self.source = source
+        self.destination = destination
+
+    def observe(self, s):
+        return np.moveaxis(s, self.source, self.destination)
+
 class ResampleSensor:
     def __init__(self, scale, order=0):
         assert type(scale) is int
