@@ -4,7 +4,7 @@ from visgrid.taxi.taxi import *
 from visgrid.taxi.skills import *
 
 random.seed(0)
-w = BusyTaxi5x5()
+w = Taxi5x5(n_passengers=3)
 w.plot()
 
 #%%

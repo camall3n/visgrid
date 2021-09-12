@@ -75,7 +75,7 @@ class BaseTaxi(GridWorld):
             goal_depots = list(self.depots.keys())
             random.shuffle(goal_depots)
             N = len(self.passengers)
-            while all([g == s for g, s in zip(goal_depots[:N], start_depots[:N])]):
+            while N > 0 and all([g == s for g, s in zip(goal_depots[:N], start_depots[:N])]):
                 random.shuffle(goal_depots)
             for p, g in zip(self.passengers, goal_depots[:N]):
                 p.color = g
@@ -90,20 +90,21 @@ class BaseTaxi(GridWorld):
             self.agent.position = self.get_random_position()
 
             # Fully randomize passenger positions (without overlap)
-            passenger_positions = np.stack(
-                [self.get_random_position() for _ in range(len(self.passengers))], axis=0)
-            while len(np.unique(passenger_positions, axis=0)) < len(passenger_positions):
+            if self.passengers:
                 passenger_positions = np.stack(
                     [self.get_random_position() for _ in range(len(self.passengers))], axis=0)
-            for i, p in enumerate(self.passengers):
-                p.position = passenger_positions[i]
+                while len(np.unique(passenger_positions, axis=0)) < len(passenger_positions):
+                    passenger_positions = np.stack(
+                        [self.get_random_position() for _ in range(len(self.passengers))], axis=0)
+                for i, p in enumerate(self.passengers):
+                    p.position = passenger_positions[i]
 
-            # Randomly decide if one passenger should be in the taxi
-            if random.random() > 0.5:
-                # If so, randomly choose which passenger
-                p = random.choice(self.passengers)
-                p.position = self.agent.position
-                p.intaxi = True
+                # Randomly decide if one passenger should be in the taxi
+                if random.random() > 0.5:
+                    # If so, randomly choose which passenger
+                    p = random.choice(self.passengers)
+                    p.position = self.agent.position
+                    p.intaxi = True
 
         return self.get_state()
 
@@ -226,9 +227,10 @@ class TaxiGoal(BaseGrid):
 class Taxi5x5(BaseTaxi, TaxiGrid5x5):
     name = 'Taxi5x5'
 
-    def __init__(self):
+    def __init__(self, n_passengers=1):
         super().__init__()
-        self.passengers = [Passenger(color='gray')]
+        assert 0 <= n_passengers <= 3, "'n_passengers' must be between 0 and 7"
+        self.passengers = [Passenger(color='gray') for _ in range(n_passengers)]
         self.reset()
 
 class VisTaxi5x5(Taxi5x5):
@@ -241,26 +243,11 @@ class VisTaxi5x5(Taxi5x5):
         ob = self.render()
         return ob, r, done
 
-class BusyTaxi5x5(BaseTaxi, TaxiGrid5x5):
-    name = 'BusyTaxi5x5'
-
-    def __init__(self):
-        super().__init__()
-        self.passengers = [Passenger(color='gray') for _ in range(3)]
-        self.reset()
-
 class Taxi10x10(BaseTaxi, TaxiGrid10x10):
     name = 'Taxi10x10'
 
-    def __init__(self):
+    def __init__(self, n_passengers=1):
         super().__init__()
-        self.passengers = [Passenger(color='gray')]
-        self.reset()
-
-class BusyTaxi10x10(BaseTaxi, TaxiGrid10x10):
-    name = 'BusyTaxi10x10'
-
-    def __init__(self):
-        super().__init__()
-        self.passengers = [Passenger(color='gray') for _ in range(7)]
+        assert 0 <= n_passengers <= 7, "'n_passengers' must be between 0 and 7"
+        self.passengers = [Passenger(color='gray') for _ in range(n_passengers)]
         self.reset()
