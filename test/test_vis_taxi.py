@@ -4,15 +4,22 @@ import numpy as np
 import random
 import scipy.ndimage
 import seeding
+from tqdm import tqdm
 
 from visgrid.gridworld import GridWorld
 from visgrid.taxi import VisTaxi5x5
 from visgrid.sensors import *
 
-seeding.seed(2, np, random)
 
+# for seed in tqdm(range(100)):
+seeding.seed(37, np, random)
 env = VisTaxi5x5()
 s = env.reset(goal=False)
+    # taxi_top_right = np.array_equal(env.agent.position, np.array([0, 4]))
+    # passenger_top_left = np.array_equal(env.passengers[0].position, np.array([0, 0]))
+    # passenger_yellow = env.passengers[0].color == 'yellow'
+    # if taxi_top_right and passenger_top_left and passenger_yellow:
+    #     break
 
 sensor_list = [
     MultiplySensor(scale=1 / 255),
@@ -32,4 +39,4 @@ images /= np.max(images)
 images *= 255
 images = images.astype(np.uint8)
 
-imageio.mimwrite('taxi.mp4', images, fps=2)
+imageio.mimwrite('taxi-after.gif', images, fps=2)
