@@ -25,3 +25,15 @@ class Passenger(BaseSprite):
                              fill=False,
                              linewidth=1 * linewidth_multiplier)
         ax.add_patch(outline)
+
+        if self.intaxi:
+            ax.vlines(x,
+                      y-0.2,
+                      y+0.2,
+                      colors='black',
+                      linewidth=0.5 * linewidth_multiplier)
+            ax.hlines(y,
+                      x-0.2,
+                      x+0.2,
+                      colors='black',
+                      linewidth=0.5 * linewidth_multiplier)
