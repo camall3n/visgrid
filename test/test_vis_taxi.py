@@ -39,4 +39,6 @@ images /= np.max(images)
 images *= 255
 images = images.astype(np.uint8)
 
-imageio.mimwrite('taxi-after.gif', images, fps=2)
+imageio.mimwrite('taxi-grayscale.gif', images, fps=2)
+
+plt.imshow(images[len(images)//2])

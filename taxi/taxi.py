@@ -52,6 +52,7 @@ class BaseTaxi(GridWorld):
         self.passenger = None
         self.goal = None
         self.wall_color = 'black'
+        self.grayscale = False
 
         # Place depots
         self.depots = dict()
@@ -68,6 +69,7 @@ class BaseTaxi(GridWorld):
         for i, p in enumerate(self.passengers):
             p.position = self.depots[start_depots[i]].position
             p.color = passenger_colors[i]
+            p.goal = p.color
         self.agent.position = self.depots[start_depots[-1]].position
 
         if goal:
@@ -79,7 +81,8 @@ class BaseTaxi(GridWorld):
                 random.shuffle(goal_depots)
             for p, g in zip(self.passengers, goal_depots[:N]):
                 p.color = g
-            self.passenger_goals = dict([(p.color, g)
+                p.goal = g
+            self.passenger_goals = dict([(p.goal, g)
                                          for p, g in zip(self.passengers, goal_depots[:N])])
             self.goal = TaxiGoal(self.passenger_goals)
         else:
@@ -149,6 +152,9 @@ class BaseTaxi(GridWorld):
         # flip image vertically
         image = image[::-1, :, :]
 
+        if self.grayscale:
+            image = np.mean(image, axis=-1, keepdims=True)
+
         return image
 
     def step(self, action):
@@ -197,7 +203,7 @@ class BaseTaxi(GridWorld):
     def get_goal_state(self):
         state = []
         for p in self.passengers:
-            goal_name = p.color
+            goal_name = p.goal
             row, col = self.depots[goal_name].position
             intaxi = False
             state.extend([row, col, intaxi])
@@ -234,8 +240,18 @@ class Taxi5x5(BaseTaxi, TaxiGrid5x5):
         self.reset()
 
 class VisTaxi5x5(Taxi5x5):
+    def __init__(self, grayscale=True, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.grayscale = grayscale
+
+        if self.grayscale and len(self.passengers) == 1:
+            for depot in self.depots.values():
+                depot.color = 'gray'
+
     def reset(self, goal=True, explore=False):
         super().reset(goal=goal, explore=explore)
+        if self.grayscale and len(self.passengers) == 1:
+            self.passengers[0].color = 'gray'
         return self.render()
 
     def step(self, action):
