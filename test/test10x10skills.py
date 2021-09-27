@@ -16,7 +16,7 @@ run_skill(w, 'interact')
 w.plot()
 
 #%%
-run_skill(w, 'blue')
+run_skill(w, 'magenta')
 w.plot()
 
 #%%

@@ -56,4 +56,36 @@ run_skill(w, 'interact')
 w.plot()
 
 #%%
+run_skill(w, 'yellow')
+w.plot()
+
+#%%
+run_skill(w, 'interact')
+w.plot()
+
+#%%
+run_skill(w, 'blue')
+w.plot()
+
+#%%
+run_skill(w, 'interact')
+w.plot()
+
+#%%
+run_skill(w, 'green')
+w.plot()
+
+#%%
+run_skill(w, 'interact')
+w.plot()
+
+#%%
+run_skill(w, 'yellow')
+w.plot()
+
+#%%
+run_skill(w, 'interact')
+w.plot()
+
+#%%
 assert w.check_goal(w.get_state())
