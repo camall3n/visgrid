@@ -10,10 +10,9 @@ from visgrid.gridworld import GridWorld
 from visgrid.taxi import VisTaxi5x5
 from visgrid.sensors import *
 
-
 # for seed in tqdm(range(100)):
-seeding.seed(37, np, random)
-env = VisTaxi5x5()
+seeding.seed(0, np, random)
+env = VisTaxi5x5(grayscale=False)
 s = env.reset(goal=False)
     # taxi_top_right = np.array_equal(env.agent.position, np.array([0, 4]))
     # passenger_top_left = np.array_equal(env.passengers[0].position, np.array([0, 0]))
@@ -39,6 +38,11 @@ images /= np.max(images)
 images *= 255
 images = images.astype(np.uint8)
 
-imageio.mimwrite('taxi-grayscale.gif', images, fps=2)
+imageio.mimwrite('taxi-rgb-v2.gif', images, fps=2)
 
-plt.imshow(images[len(images)//2])
+#%%
+fig, axes = plt.subplots(1, 4, figsize=(12,4))
+for i, ax in zip([7,8,9,10], axes):
+    ax.imshow(images[i], interpolation='nearest', cmap='gray')
+    ax.axis('off')
+plt.show()
