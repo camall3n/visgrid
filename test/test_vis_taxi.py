@@ -11,7 +11,7 @@ from visgrid.taxi import VisTaxi5x5
 from visgrid.sensors import *
 
 # for seed in tqdm(range(100)):
-seeding.seed(0, np, random)
+seeding.seed(9, np, random)
 env = VisTaxi5x5(grayscale=False)
 s = env.reset(goal=False)
     # taxi_top_right = np.array_equal(env.agent.position, np.array([0, 4]))

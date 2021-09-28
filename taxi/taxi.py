@@ -104,13 +104,16 @@ class BaseTaxi(GridWorld):
                 for i, p in enumerate(self.passengers):
                     p.position = passenger_positions[i]
 
-                # Randomly decide if one passenger should be in the taxi
+                # Randomly decide if one passenger should be at the taxi
                 if random.random() > 0.5:
                     # If so, randomly choose which passenger
                     p = random.choice(self.passengers)
                     p.position = self.agent.position
-                    p.intaxi = True
-                    self.passenger = p
+
+                    # Randomly decide if that passenger should be *in* the taxi
+                    if random.random() > 0.5:
+                        p.intaxi = True
+                        self.passenger = p
 
         return self.get_state()
 
@@ -253,7 +256,6 @@ class Taxi5x5(BaseTaxi, TaxiGrid5x5):
         super().__init__()
         assert 0 <= n_passengers <= 3, "'n_passengers' must be between 0 and 7"
         self.passengers = [Passenger(color='gray') for _ in range(n_passengers)]
-        self.reset()
 
 class VisTaxi5x5(Taxi5x5):
     def __init__(self, grayscale=True, *args, **kwargs):
