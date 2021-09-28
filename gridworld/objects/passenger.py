@@ -31,3 +31,12 @@ class Passenger(BaseSprite):
         if self.intaxi:
             ax.vlines(x, y - 0.2, y + 0.2, colors='black', linewidth=0.5 * linewidth_multiplier)
             ax.hlines(y, x - 0.2, x + 0.2, colors='black', linewidth=0.5 * linewidth_multiplier)
+        else:
+            ax.plot([x - 0.15, x + 0.15], [y - 0.15, y + 0.15],
+                    color='black',
+                    markersize=0,
+                    linewidth=0.6 * linewidth_multiplier)
+            ax.plot([x - 0.15, x + 0.15], [y + 0.15, y - 0.15],
+                    color='black',
+                    markersize=0,
+                    linewidth=0.6 * linewidth_multiplier)
