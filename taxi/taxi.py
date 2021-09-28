@@ -70,6 +70,7 @@ class BaseTaxi(GridWorld):
             p.position = self.depots[start_depots[i]].position
             p.color = passenger_colors[i]
             p.goal = p.color
+            p.intaxi = False
         self.agent.position = self.depots[start_depots[-1]].position
 
         if goal:
@@ -108,6 +109,7 @@ class BaseTaxi(GridWorld):
                     p = random.choice(self.passengers)
                     p.position = self.agent.position
                     p.intaxi = True
+                    self.passenger = p
 
         return self.get_state()
 
@@ -248,7 +250,7 @@ class VisTaxi5x5(Taxi5x5):
             for depot in self.depots.values():
                 depot.color = 'gray'
 
-    def reset(self, goal=True, explore=False):
+    def reset(self, goal=False, explore=False):
         super().reset(goal=goal, explore=explore)
         if self.grayscale and len(self.passengers) == 1:
             self.passengers[0].color = 'gray'
