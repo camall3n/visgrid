@@ -1,5 +1,6 @@
 import copy
 import numpy as np
+import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import scipy.ndimage
 import random
@@ -147,8 +148,21 @@ class BaseTaxi(GridWorld):
         # downsample to 80x80
         image_content = scipy.ndimage.zoom(image_content, zoom=(1 / 16, 1 / 16, 1), order=1)
 
-        # pad with zeros to 84x84
-        image = 255 * np.ones((84, 84, 3), dtype=image_content.dtype)
+        if self.passenger:
+            # pad with black/white dashes to 84x84
+            if self.grayscale:
+                dash_color = 255 * np.ones(3)
+            else:
+                dash_color = get_rgb(self.passenger.get_good_color(self.passenger.color))
+            image = np.tile(
+                np.block([[np.ones((6, 6)), np.zeros((6, 6))], [np.zeros((6, 6)),
+                                                                np.ones((6, 6))]]), (7, 7))
+            image = np.tile(np.expand_dims(image, -1), (1, 1, 3)).astype(image_content.dtype)
+            image = 255 * image * dash_color
+        else:
+            # pad with white to 84x84
+            image = 255 * np.ones((84, 84, 3), dtype=image_content.dtype)
+
         image[2:-2, 2:-2, :] = image_content
 
         # flip image vertically
@@ -269,3 +283,6 @@ class Taxi10x10(BaseTaxi, TaxiGrid10x10):
         assert 0 <= n_passengers <= 7, "'n_passengers' must be between 0 and 7"
         self.passengers = [Passenger(color='gray') for _ in range(n_passengers)]
         self.reset()
+
+def get_rgb(colorname):
+    return colors.hex2color(colors.get_named_colors_mapping()[colorname])
