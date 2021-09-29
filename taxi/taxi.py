@@ -62,6 +62,7 @@ class BaseTaxi(GridWorld):
             self.depots[name].position = self.depot_locs[name]
 
     def reset(self, goal=True, explore=False):
+        self.passenger = None
         # Place passengers and taxi
         start_depots = list(self.depot_names)
         passenger_colors = copy.deepcopy(start_depots)
@@ -140,10 +141,12 @@ class BaseTaxi(GridWorld):
         self.plot(ax, draw_bg_grid=False, linewidth_multiplier=4)
 
         # extract image buffer from pyplot
+        # yapf: disable
         fig.canvas.draw()
-        image_content = np.frombuffer(fig.canvas.tostring_rgb(),
-                                      dtype='uint8').reshape(fig.canvas.get_width_height()[::-1] +
-                                                             (3, ))
+        image_content = np.frombuffer(
+            fig.canvas.tostring_rgb(), dtype='uint8').reshape(
+                fig.canvas.get_width_height()[::-1] + (3, ))
+        # yapf: enable
 
         # prevent figure from actually displaying
         plt.close(fig)
@@ -151,7 +154,7 @@ class BaseTaxi(GridWorld):
         # downsample to 80x80
         image_content = scipy.ndimage.zoom(image_content, zoom=(1 / 16, 1 / 16, 1), order=1)
 
-        if self.passenger:
+        if self.passenger is not None:
             # pad with black/white dashes to 84x84
             if self.grayscale:
                 dash_color = 255 * np.ones(3)
