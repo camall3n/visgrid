@@ -21,7 +21,7 @@ s = env.reset(goal=False)
     #     break
 
 sensor_list = [
-    MultiplySensor(scale=1 / 255),
+    # MultiplySensor(scale=1 / 255),
     NoisySensor(sigma=0.05),
 ]
 sensor = SensorChain(sensor_list)

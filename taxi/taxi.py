@@ -132,48 +132,51 @@ class BaseTaxi(GridWorld):
             p.plot(ax, linewidth_multiplier=linewidth_multiplier)
 
     def render(self):
-        # make a large 1280x1280 plot
-        fig, ax = plt.subplots(figsize=(2, 2), dpi=640)
-        ax.axis('off')
-        ax.margins(0)
-        fig.tight_layout(pad=0)
+        wall_width = 2
+        cell_width = 13
+        passenger_width = 9
+        depot_width = 3
 
-        # draw with thick lines & without background grid markers
-        self.plot(ax, draw_bg_grid=False, linewidth_multiplier=4)
+        walls = expand_grid(self._grid, cell_width, wall_width)
+        walls = to_rgb(walls) * get_rgb('dimgray') / 8
 
-        # extract image buffer from pyplot
-        # yapf: disable
-        fig.canvas.draw()
-        image_content = np.frombuffer(
-            fig.canvas.tostring_rgb(), dtype='uint8').reshape(
-                fig.canvas.get_width_height()[::-1] + (3, ))
-        # yapf: enable
+        passengers = np.zeros_like(walls)
+        for p in self.passengers:
+            patch, marks = passenger_patch(cell_width, passenger_width, p.intaxi)
+            color_patch = to_rgb(patch) * get_rgb(p.color)
+            color_patch[marks > 0, :] = get_rgb('dimgray') / 4
+            row, col = cell_start(p.position, cell_width, wall_width)
+            passengers[row:row + cell_width, col:col + cell_width, :] = color_patch
 
-        # prevent figure from actually displaying
-        plt.close(fig)
+        depots = np.zeros_like(walls)
+        for depot in self.depots.values():
+            patch = depot_patch(cell_width, depot_width)
+            color_patch = to_rgb(patch) * get_rgb(depot.color)
+            row, col = cell_start(depot.position, cell_width, wall_width)
+            depots[row:row + cell_width, col:col + cell_width, :] = color_patch
 
-        # downsample to 80x80
-        image_content = scipy.ndimage.zoom(image_content, zoom=(1 / 16, 1 / 16, 1), order=1)
+        taxis = np.zeros_like(walls)
+        patch = taxi_patch(cell_width, depot_width, passenger_width)
+        color_patch = to_rgb(patch) * get_rgb('dimgray') / 4
+        row, col = cell_start(self.agent.position, cell_width, wall_width)
+        taxis[row:row + cell_width, col:col + cell_width, :] = color_patch
 
-        if self.passenger is not None:
-            # pad with black/white dashes to 84x84
-            if self.grayscale:
-                dash_color = 255 * np.ones(3)
-            else:
-                dash_color = get_rgb(self.passenger.get_good_color(self.passenger.color))
-            image = np.tile(
-                np.block([[np.ones((6, 6)), np.zeros((6, 6))], [np.zeros((6, 6)),
-                                                                np.ones((6, 6))]]), (7, 7))
-            image = np.tile(np.expand_dims(image, -1), (1, 1, 3)).astype(image_content.dtype)
-            image = 255 * image * dash_color
-        else:
-            # pad with white to 84x84
-            image = 255 * np.ones((84, 84, 3), dtype=image_content.dtype)
+        # compute foreground
+        objects = passengers + depots + walls + taxis
+        fg = np.any(objects > 0, axis=-1)
 
-        image[2:-2, 2:-2, :] = image_content
+        # compute background
+        bg = np.ones_like(walls) * get_rgb('white')
+        bg[fg, :] = 0
 
-        # flip image vertically
-        image = image[::-1, :, :]
+        # construct border
+        in_taxi = (self.passenger is not None)
+        border_color = get_rgb('white' if self.grayscale or not in_taxi else self.passenger.color)
+        image = generate_border(in_taxi, border_color)
+
+        # insert content on top of border
+        content = bg + objects
+        image[4:-3, 4:-3, :] = content
 
         if self.grayscale:
             image = np.mean(image, axis=-1, keepdims=True)
@@ -291,4 +294,115 @@ class Taxi10x10(BaseTaxi, TaxiGrid10x10):
         self.reset()
 
 def get_rgb(colorname):
-    return colors.hex2color(colors.get_named_colors_mapping()[colorname])
+    good_color = utils.get_good_color(colorname)
+    color_tuple = colors.hex2color(colors.get_named_colors_mapping()[good_color])
+    return np.asarray(color_tuple)
+
+def to_rgb(array):
+    """Add a channel dimension with 3 entries"""
+    return np.tile(array[:, :, np.newaxis], (1, 1, 3))
+
+def cell_start(position, cell_width, wall_width):
+    """Compute <row, col> indices of top-left pixel of cell at given position"""
+    row, col = position
+    row_start = wall_width + row * (cell_width + wall_width)
+    col_start = wall_width + col * (cell_width + wall_width)
+    return (row_start, col_start)
+
+def expand_grid(grid, cell_width, wall_width):
+    """Expand the built-in maze grid using the provided width information"""
+    for row_or_col_axis in [0, 1]:
+        slices = np.split(grid, grid.shape[row_or_col_axis], axis=row_or_col_axis)
+        walls = slices[0::2]
+        cells = slices[1::2]
+        walls = [np.repeat(wall, wall_width, axis=row_or_col_axis) for wall in walls]
+        cells = [np.repeat(cell, cell_width, axis=row_or_col_axis) for cell in cells]
+        slices = [item for pair in zip(walls, cells) for item in pair] + [walls[-1]]
+        grid = np.concatenate(slices, axis=row_or_col_axis).astype(float)
+    return grid
+
+def passenger_patch(cell_width, passenger_width, in_taxi):
+    """Generate a patch representing a passenger, along with any associated marks"""
+    assert passenger_width <= cell_width
+    sw_bg = np.tri(cell_width // 2, k=(cell_width // 2 - passenger_width // 2 - 2), dtype=int)
+    nw_bg = np.flipud(sw_bg)
+    ne_bg = np.fliplr(nw_bg)
+    se_bg = np.fliplr(sw_bg)
+
+    bg = np.block([[nw_bg, ne_bg], [sw_bg, se_bg]])
+
+    # add center row / column for odd widths
+    if cell_width % 2 == 1:
+        bg = np.insert(bg, cell_width // 2, 0, axis=0)
+        bg = np.insert(bg, cell_width // 2, 0, axis=1)
+
+    # crop edges to a circle and invert
+    excess = (cell_width - passenger_width) // 2
+    bg[:excess, :] = 1
+    bg[:, :excess] = 1
+    bg[-excess:, :] = 1
+    bg[:, -excess:] = 1
+    patch = (1 - bg)
+
+    # add marks relating to 'in_taxi'
+    center = cell_width // 2
+    if in_taxi:
+        marks = np.zeros_like(patch)
+        marks[center, :] = 1
+        marks[:, center] = 1
+    else:
+        marks = np.eye(cell_width, dtype=int) | np.fliplr(np.eye(cell_width, dtype=int))
+    marks[patch == 0] = 0
+
+    return patch, marks
+
+def depot_patch(cell_width, depot_width):
+    """Generate a patch representing a depot"""
+    assert depot_width <= cell_width // 2
+    sw_patch = np.tri(cell_width // 2, k=(depot_width - cell_width // 2))
+    nw_patch = np.flipud(sw_patch)
+    ne_patch = np.fliplr(nw_patch)
+    se_patch = np.fliplr(sw_patch)
+
+    patch = np.block([[nw_patch, ne_patch], [sw_patch, se_patch]])
+
+    # add center row / column for odd widths
+    if cell_width % 2 == 1:
+        patch = np.insert(patch, cell_width // 2, 0, axis=0)
+        patch = np.insert(patch, cell_width // 2, 0, axis=1)
+
+    patch[0, :] = 1
+    patch[:, 0] = 1
+    patch[-1, :] = 1
+    patch[:, -1] = 1
+
+    return patch
+
+def taxi_patch(cell_width, depot_width, passenger_width):
+    """Generate a patch representing a taxi"""
+    depot = depot_patch(cell_width, depot_width)
+    passenger, _ = passenger_patch(cell_width, passenger_width, False)
+    taxi_patch = 1 - (depot + passenger)
+
+    # crop edges
+    taxi_patch[0, :] = 0
+    taxi_patch[:, 0] = 0
+    taxi_patch[-1, :] = 0
+    taxi_patch[:, -1] = 0
+
+    return taxi_patch
+
+def generate_border(in_taxi, color=None):
+    """Generate a border to reflect the current in_taxi status"""
+    if in_taxi:
+        # pad with dashes to 84x84
+        image = np.tile(
+            np.block([[np.ones((6, 6)), np.zeros((6, 6))], [np.zeros((6, 6)),
+                                                            np.ones((6, 6))]]), (7, 7))
+        image = np.tile(np.expand_dims(image, -1), (1, 1, 3))
+        image = image * color
+    else:
+        # pad with white to 84x84
+        image = np.ones((84, 84, 3))
+
+    return image
