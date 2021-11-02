@@ -38,7 +38,8 @@ images /= np.max(images)
 images *= 255
 images = images.astype(np.uint8)
 
-imageio.mimwrite('taxi-rgb-v2.gif', images, fps=2)
+color_str = 'grayscale' if env.grayscale else 'rgb'
+imageio.mimwrite('taxi-{}-v3.gif'.format(color_str), images, fps=2)
 
 #%%
 fig, axes = plt.subplots(1, 4, figsize=(12,4))
