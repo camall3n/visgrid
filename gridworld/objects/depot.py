@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from .basesprite import BaseSprite, pos2xy
+from visgrid import utils
 
 class Depot(BaseSprite):
     def __init__(self, position=(0, 0), color='red'):
@@ -9,7 +10,7 @@ class Depot(BaseSprite):
 
     def plot(self, ax, linewidth_multiplier=1.0):
         xy = pos2xy(self.position) + (0.1, 0.1)
-        colorname = self.get_good_color(self.color)
+        colorname = utils.get_good_color(self.color)
         c = plt.Rectangle(xy,
                           0.8,
                           0.8,

@@ -59,3 +59,11 @@ def load_experiment(tag, coefs=None):
     results = [read_log(log) for log in logs]
     data = dict(zip(seeds, results))
     return data
+
+def get_good_color(color):
+    colorname = color
+    colorname = 'gold' if colorname == 'yellow' else colorname
+    colorname = 'c' if colorname == 'cyan' else colorname
+    colorname = 'm' if colorname == 'magenta' else colorname
+    colorname = 'silver' if colorname in ['gray', 'grey'] else colorname
+    return colorname

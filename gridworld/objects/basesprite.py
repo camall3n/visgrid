@@ -16,13 +16,5 @@ class BaseSprite:
         c = plt.Circle(xy, 0.2, color='k', fill=False, linewidth=1)
         ax.add_patch(c)
 
-    def get_good_color(self, color):
-        colorname = color
-        colorname = 'gold' if colorname == 'yellow' else colorname
-        colorname = 'c' if colorname == 'cyan' else colorname
-        colorname = 'm' if colorname == 'magenta' else colorname
-        colorname = 'silver' if colorname in ['gray', 'grey'] else colorname
-        return colorname
-
 def pos2xy(pos):
     return np.asarray(pos)[::-1]

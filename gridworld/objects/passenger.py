@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from .basesprite import BaseSprite, pos2xy
+from visgrid import utils
 
 class Passenger(BaseSprite):
     def __init__(self, position=(0, 0), goal='red', color='gray'):
@@ -11,7 +12,7 @@ class Passenger(BaseSprite):
 
     def plot(self, ax, linewidth_multiplier=1.0):
         x, y = pos2xy(self.position) + (0.5, 0.5)
-        outline_color = self.get_good_color(self.color)
+        outline_color = utils.get_good_color(self.color)
         fill_color = outline_color  # if self.intaxi else 'white'
         fill_passenger = True  #self.intaxi
 

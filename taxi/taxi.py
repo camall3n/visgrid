@@ -8,6 +8,7 @@ from ..gridworld.grid import BaseGrid
 from ..gridworld.gridworld import GridWorld
 from ..gridworld.objects.passenger import Passenger
 from ..gridworld.objects.depot import Depot
+from visgrid import utils
 
 class TaxiGrid5x5(BaseGrid):
     depot_locs = {# yapf: disable
