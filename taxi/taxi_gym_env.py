@@ -1,7 +1,6 @@
 #importing required libraries for gym env
 import gym
 import numpy as np
-sys.path.append('.')
 from visgrid.taxi.taxi import VisTaxi5x5
 
 #debugging
