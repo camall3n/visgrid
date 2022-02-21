@@ -18,7 +18,7 @@ class TaxiEnv(gym.Env):
 
         #kwargs = {n_passengers: 1}
 
-        self.taxi_env = VisTaxi5x5(n_passengers=1, greyscale=False)
+        self.taxi_env = VisTaxi5x5(n_passengers=1, grayscale=False)
 
         #reset the env initially
         # get_state() in gridworld.py [GridWorld] returns agent's init. state
@@ -28,7 +28,7 @@ class TaxiEnv(gym.Env):
 
         '''choose either approach for state information: only agent position or passenger positions/in-taxi + taxi position'''
         self.agent_state = self.taxi_env.agent.position
-        self.agent_state = self.taxi_env.get_state()
+        # self.agent_state = self.taxi_env.get_state()
 
 
         # action space between 0 to 4:  [base grid actions] 0: LEFT, 1: RIGHT, 2: UP, 3: DOWN, 4: PICKUP [added new in taxi.py]
@@ -55,7 +55,7 @@ class TaxiEnv(gym.Env):
         #update the agent_state: taxi position
         '''choose either approach for state information: only agent position or passenger positions/in-taxi + taxi position'''
         self.agent_state = self.taxi_env.agent.position
-        self.agent_state = self.taxi_env.get_state()
+        # self.agent_state = self.taxi_env.get_state()
 
         #store the observation/state representation after reset
         observation = {'image' : rendered_taxi}
