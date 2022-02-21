@@ -94,13 +94,14 @@ class TaxiEnv(gym.Env):
 
 
     def render(self, mode='rgb_array', highlight = False, tile_size = 1, close=False):
+
         '''render the environment to the screen'''
 
-         #returns an array of size (height,width,3) with values 0-255
-         taxi_rendering = self.taxi_env.render()
+        #returns an array of size (height,width,3) with values 0-255
+        taxi_rendering = self.taxi_env.render()
 
          #physically display the rendering of the puzle
          if mode=='human':
-             pass 
+             pass
 
          return taxi_rendering
