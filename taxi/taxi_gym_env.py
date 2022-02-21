@@ -2,7 +2,8 @@
 import gym
 import numpy as np
 from visgrid.taxi.taxi import VisTaxi5x5
-from gym.envs.classic_control import rendering
+# from gym.envs.classic_control import rendering
+#from stable_baselines.common.env_checker import check_env
 
 #debugging
 import pdb
@@ -28,7 +29,7 @@ class TaxiEnv(gym.Env):
         # get_state() in taxi.py [BaseTaxi] returns agent's position + passengers position/in-taxi state
         # reset() from taxi.py [BaseTaxi] returns rendered env
         taxi_rendering = self.taxi_env.reset(goal=have_goal, explore=randomize_positions)
-        taxi_rendering = self._render_gridworld(taxi_rendering)
+        # taxi_rendering = self._render_gridworld(taxi_rendering)
 
         #render the puzzle and measure height and width: this is our observation space
         (height,width,channels) = taxi_rendering.shape
@@ -64,7 +65,7 @@ class TaxiEnv(gym.Env):
         '''resets the state to the starting point'''
 
         rendered_taxi = self.taxi_env.reset(goal,explore)
-        rendered_taxi = self._render_gridworld(rendered_taxi)
+        # rendered_taxi = self._render_gridworld(rendered_taxi)
         self.T = 0
 
         #update the agent_state: taxi position
@@ -89,7 +90,7 @@ class TaxiEnv(gym.Env):
 
         #note: the step() function accepts indexed actions from the self.action_space
         taxi_rendering, reward, done = self.taxi_env.step(action)
-        taxi_rendering = self._render_gridworld(taxi_rendering)
+        # taxi_rendering = self._render_gridworld(taxi_rendering)
 
         if self.ignore_rewards:
             reward = 0.0
@@ -126,7 +127,7 @@ class TaxiEnv(gym.Env):
         #returns an array of size (height,width,3) with values 0-255
         if mode=='rgb_array':
             taxi_rendering = self.taxi_env.render()
-            taxi_rendering = self._render_gridworld(taxi_rendering)
+            #taxi_rendering = self._render_gridworld(taxi_rendering)
 
         #physically display the rendering of the puzle
         elif mode=='human':
