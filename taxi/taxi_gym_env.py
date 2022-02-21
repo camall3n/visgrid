@@ -19,7 +19,7 @@ class TaxiEnv(gym.Env):
 
         kwargs = {n_passengers: 1}
 
-        self.taxi_env = VisTaxi5x5(greyscale=False, kwargs)
+        self.taxi_env = VisTaxi5x5(kwargs, greyscale=False)
 
         #reset the env initially
         # get_state() in gridworld.py [GridWorld] returns agent's init. state
