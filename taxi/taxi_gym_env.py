@@ -183,7 +183,7 @@ class TaxiEnv(gym.Env):
 
                 pixel = get_polygon(r,c)
 
-                pixel.set_color(taxi_rgb_array[r,c,:]/255)
+                pixel.set_color(tuple(taxi_rgb_array[r,c,:]/255))
 
                 self.viewer.add_geom(block)
 
