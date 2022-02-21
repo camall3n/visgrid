@@ -100,8 +100,9 @@ class TaxiEnv(gym.Env):
         #returns an array of size (height,width,3) with values 0-255
         taxi_rendering = self.taxi_env.render()
 
-         #physically display the rendering of the puzle
-         if mode=='human':
-             pass
+        #physically display the rendering of the puzle
+        if mode=='human':
+            pass
 
-         return taxi_rendering
+
+        return taxi_rendering
