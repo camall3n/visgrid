@@ -1,8 +1,8 @@
 #importing required libraries for gym env
 import gym
 import numpy as np
-from taxi import VisTaxi5x5
-#from stable_baselines.common.env_checker import check_env
+sys.path.append('.')
+from visgrid.taxi.taxi import VisTaxi5x5
 
 #debugging
 import pdb
