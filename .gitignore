@@ -13,3 +13,4 @@ results/
 archive/
 *.vagrant/
 *.sif
+.DS_Store
