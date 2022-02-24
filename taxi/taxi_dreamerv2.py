@@ -107,7 +107,7 @@ if hasattr(env.act_space['action'], 'n'):
     env = common.OneHotAction(env)
 else:
     env = common.NormalizeAction(env)
-env = common.TimeLimit(env, config.time_limit)
+env = common.TimeLimit(env, config_data.time_limit)
 
 pdb.set_trace()
 
