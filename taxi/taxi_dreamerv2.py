@@ -99,6 +99,7 @@ config_data = {
 configurations = dreamer_v2.defaults.update(config_data).parse_flags()
 
 env = TaxiEnv()
+pdb.set_trace()
 env = common.GymWrapper(env)
 env = common.ResizeImage(env)
 if hasattr(env.act_space['action'], 'n'):
