@@ -23,22 +23,22 @@ config_data = {
     'task':'taxi_env',
     'envs': 1,
     'envs_parallel': 'none',
-    'render_size': [120,120],
+    'render_size': [64,64],
     'dmc_camera': -1,
     'atari_grayscale': False, #for atari suite, converts to grayscale image
-    'time_limit': 2000,
+    'time_limit': 0,
     'action_repeat': 1, #multiplier when logging action
     'steps': 700, #max number of steps to take
     'log_every': 50, #number of steps to log video and metrics
     'eval_every': 50, #evaluate policy every 'k' steps: Actor-Critic
     'eval_eps': 1, #number of episodes to run evaluation?
-    'prefill': 200, #number of steps (in 1 epoch) to 'prefill' before world model sequencing [learning world model] [random agent acts for 'k' steps]
+    'prefill': 300, #number of steps (in 1 epoch) to 'prefill' before world model sequencing [learning world model] [random agent acts for 'k' steps]
     'pretrain': 1,
-    'train_every': 1,
-    'train_steps': 25,
-    'expl_until': 5, #number of steps to initially explore
-    'replay': {'capacity': 400, 'ongoing': True, 'minlen': 3, 'maxlen': 25, 'prioritize_ends': True},
-    'dataset': {'batch': 16, 'length': 40},
+    'train_every': 5,
+    'train_steps': 1,
+    'expl_until': 0, #number of steps to initially explore
+    'replay': {'capacity': 300, 'ongoing': True, 'minlen': 10, 'maxlen': 30, 'prioritize_ends': True},
+    'dataset': {'batch': 16, 'length': 50},
     'log_keys_video': ['image'],
     'log_keys_sum': '^$',
     'log_keys_mean': '^$',
