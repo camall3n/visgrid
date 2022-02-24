@@ -100,14 +100,14 @@ config_data = {
 configurations = dreamer_v2.defaults.update(config_data).parse_flags()
 
 env = TaxiEnv()
-pdb.set_trace()
-env = common.GymWrapper(env)
-env = common.ResizeImage(env)
-if hasattr(env.act_space['action'], 'n'):
-    env = common.OneHotAction(env)
-else:
-    env = common.NormalizeAction(env)
-env = common.TimeLimit(env, configurations.time_limit)
+# pdb.set_trace()
+# env = common.GymWrapper(env)
+# env = common.ResizeImage(env)
+# if hasattr(env.act_space['action'], 'n'):
+#     env = common.OneHotAction(env)
+# else:
+#     env = common.NormalizeAction(env)
+# env = common.TimeLimit(env, configurations.time_limit)
 
 pdb.set_trace()
 
