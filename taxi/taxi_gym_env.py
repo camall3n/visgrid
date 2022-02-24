@@ -63,7 +63,7 @@ class TaxiEnv(gym.Env):
         info = self._get_current_info()
 
         #consider terminal state v.s. timeout (reaching max steps)
-        timeout = (self.T%self.max_steps_per_episode)==0
+        timeout = (self.T%self.max_steps_per_episode)==0 if self.max_steps_per_episode is not None else False
 
         info['timeout'] = timeout
         info['is_terminal'] = is_terminal
