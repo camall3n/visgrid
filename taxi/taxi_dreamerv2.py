@@ -103,6 +103,7 @@ env = TaxiEnv()
 pdb.set_trace()
 env = common.GymWrapper(env)
 env = common.ResizeImage(env)
+
 pdb.set_trace()
 if hasattr(env.act_space['action'], 'n'):
     env = common.OneHotAction(env)
