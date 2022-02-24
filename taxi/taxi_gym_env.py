@@ -20,6 +20,7 @@ class TaxiEnv(gym.Env):
         #base TaxiEnv environment: logistics
         self.taxi_env = VisTaxi5x5(n_passengers =  num_passengers, grayscale = grayscale)
         taxi_rendering = self.taxi_env.reset(goal = have_goal, explore = randomize_positions)
+        taxi_rendering = self._convert_to_int(taxi_rendering)
 
         #stored for future resets
         self.have_goal = have_goal; self.randomize_positions = randomize_positions
@@ -49,6 +50,7 @@ class TaxiEnv(gym.Env):
 
         #increment step counter and take step in TaxiEnv
         taxi_rendering, reward, is_terminal = self.taxi_env.step(action)
+        taxi_rendering = self._convert_to_int(taxi_rendering)
 
         self.T += 1
 
@@ -79,6 +81,7 @@ class TaxiEnv(gym.Env):
 
         #reset taxi environment: returns rendered RGB array
         rendered_taxi = self.taxi_env.reset(self.have_goal, self.randomize_positions)
+        rendered_taxi = self._convert_to_int(rendered_taxi)
 
         #reset step count to 0
         self.T = 0
@@ -97,6 +100,7 @@ class TaxiEnv(gym.Env):
         #render RGB array for environment
         if mode=='rgb_array':
             rendered_taxi = self.taxi_env.render()
+            rendered_taxi = self._convert_to_int(rendered_taxi)
         else:
             raise NotImplementedError
 
@@ -123,3 +127,14 @@ class TaxiEnv(gym.Env):
             info['p{}_in_taxi'.format(i)] = p_in_taxi
 
         return info
+
+    def _convert_to_int(self, observation):
+        '''casts a 0-1 image array (observation) into a 0-255 int array '''
+
+        #scaling 0-1 to 0-255
+        observation = observation*255
+
+        #converting from float to int array
+        observation = observation.astype(np.uint8)
+
+        return observation
