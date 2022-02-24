@@ -2,8 +2,7 @@
 import gym
 import numpy as np
 from visgrid.taxi.taxi import VisTaxi5x5
-# from gym.envs.classic_control import rendering
-#from stable_baselines.common.env_checker import check_env
+
 
 #debugging
 import pdb
@@ -15,131 +14,94 @@ class TaxiEnv(gym.Env):
     metadata = {'render.modes': ['human', 'rgb_array']}
 
 
-    def __init__(self, num_passengers, greyscale_visualization, add_noise, randomize_positions, have_goal, ignore_rewards, max_steps_per_episode):
+    def __init__(self, num_passengers=1, grayscale =False, have_goal = True, randomize_positions = True, ignore_rewards = False, max_steps_per_episode = None):
+        '''creates taxi gym env: passed into GymWrapper for dreamerv2'''
 
-        self.taxi_env = VisTaxi5x5(n_passengers=num_passengers, grayscale=greyscale_visualization)
+        #base TaxiEnv environment: logistics
+        self.taxi_env = VisTaxi5x5(n_passengers =  num_passengers, grayscale = grayscale)
+        taxi_rendering = self.taxi_env.reset(goal = have_goal, explore = randomize_positions)
 
-        #gym classic_control rendering to store visual output of taxi env
-        self.viewer = None
-        #configurations for rendering
-        self.screen_height = 520; self.screen_width = 520
+        #stored for future resets
+        self.have_goal = have_goal; self.randomize_positions = randomize_positions
 
-        #reset the env initially
-        # get_state() in gridworld.py [GridWorld] returns agent's init. state
-        # get_state() in taxi.py [BaseTaxi] returns agent's position + passengers position/in-taxi state
-        # reset() from taxi.py [BaseTaxi] returns rendered env
-        taxi_rendering = self.taxi_env.reset(goal=have_goal, explore=randomize_positions)
-        # taxi_rendering = self._render_gridworld(taxi_rendering)
+        #observation space for TaxiEnv: RGB array
+        #self.observation_space = gym.spaces.Box(low=0, high=255, shape = taxi_rendering.shape, dtype = np.uint8)
+        self.observation_space = taxi_rendering
 
-        #render the puzzle and measure height and width: this is our observation space
-        (height,width,channels) = taxi_rendering.shape
-        self.height = height; self.width = width
-
-
-
-        '''choose either approach for state information: only agent position or passenger positions/in-taxi + taxi position'''
-        self.agent_state = self.taxi_env.agent.position
-        # self.agent_state = self.taxi_env.get_state()
-
-
-        # action space between 0 to 4:  [base grid actions] 0: LEFT, 1: RIGHT, 2: UP, 3: DOWN, 4: PICKUP [added new in taxi.py]
+        #action space for TaxiEnv: discrete action space UP,DOWN,LEFT,RIGHT,PICKUP/DROP [added new in taxi.py]
         self.action_space = gym.spaces.Discrete(len(self.taxi_env.actions))
 
-
-
-        #encoding the observation space as a grid of pixels (each in range 0-255)
-        self.observation_space = gym.spaces.Box(low = 0, high = 255, shape=(height, width, channels), dtype=np.uint8)
-        self.observation_space = gym.spaces.Dict({'image': self.observation_space})
-
-
-        #tracking steps per episode + state of termination
+        #tracking steps + steps per episode + reward behaviour
         self.T = 0
         self.max_steps_per_episode = max_steps_per_episode
-        self.done = False
         self.ignore_rewards = ignore_rewards
-
-
-
-
-    def reset(self, goal=True, explore=True):
-        '''resets the state to the starting point'''
-
-        rendered_taxi = self.taxi_env.reset(goal,explore)
-        # rendered_taxi = self._render_gridworld(rendered_taxi)
-        self.T = 0
-
-        #update the agent_state: taxi position
-        '''choose either approach for state information: only agent position or passenger positions/in-taxi + taxi position'''
-        self.agent_state = self.taxi_env.agent.position
-        # self.agent_state = self.taxi_env.get_state()
-
-        #store the observation/state representation after reset
-        observation = {'image' : rendered_taxi}
-
-        return observation
 
 
 
     def step(self, action):
         '''
-        converts an input from the self.action_space into a gridworld move, takes the action on the gridworld
-        returns: state (as observation, after taking action), reward, done, info
+        step function
+        converts an input from the self.action_space [Discrete space] into a Taxi gridworld move, takes the action on the Taxi gridworld
+
+        input: action (sampled from self.action_space)
+        returns: observation (after taking action), reward, done, info
         '''
+
+        #increment step counter and take step in TaxiEnv
+        taxi_rendering, reward, is_terminal = self.taxi_env.step(action)
 
         self.T += 1
 
-        #note: the step() function accepts indexed actions from the self.action_space
-        taxi_rendering, reward, done = self.taxi_env.step(action)
-        # taxi_rendering = self._render_gridworld(taxi_rendering)
-
         if self.ignore_rewards:
-            reward = 0.0
+            reward = 0
             done = False
 
-        #temporary variable: information dict
-        info = {}
 
-        #extract state information for info dict
-        state_info = self.taxi_env.get_state()
+        #tracking new info dict + adding terminal state info
+        info = self._get_current_info()
 
-        taxi_position = state_info[0:2];  info['taxi'] = taxi_position
+        #consider terminal state v.s. timeout (reaching max steps)
+        timeout = (self.T%self.max_steps_per_episode)==0
 
-        #store position + in-taxi information for each passenger
-        for i in range(0,len(state_info[2:]),3):
+        info['timeout'] = timeout
+        info['is_terminal'] = is_terminal
 
-            info['p{}'.format(i)] = state_info[i:i+3]
+        return taxi_rendering, reward, is_terminal or timeout, info
 
+    def reset(self):
+        '''
+        reset function
+        resets the state to the starting point
 
-        observation = {'image':taxi_rendering}
+        input: None
+        output: state observation after resetting env
+        '''
 
-        #checking reset condition
-        reset = self.T%self.max_steps_per_episode==0
-        self.done = done or reset
+        #reset taxi environment: returns rendered RGB array
+        rendered_taxi = self.taxi_env.reset(self.have_goal, self.randomize_positions)
 
-        return observation, reward, done or reset, info
+        #reset step count to 0
+        self.T = 0
 
+        return rendered_taxi
 
-    def render(self, mode='rgb_array', highlight = False, tile_size = 1, close=False):
-        '''render the environment to the screen'''
+    def render(self, mode='rgb_array'):
+        '''
+        render function
+        generates RGB array of environment
 
-        assert mode in ("human", "rgb_array"), mode
+        input: None
+        output: RGB array of environment
+        '''
 
-        #returns an array of size (height,width,3) with values 0-255
+        #render RGB array for environment
         if mode=='rgb_array':
-            taxi_rendering = self.taxi_env.render()
-            #taxi_rendering = self._render_gridworld(taxi_rendering)
+            rendered_taxi = self.taxi_env.render()
+        else:
+            raise NotImplementedError
 
-        #physically display the rendering of the puzle
-        elif mode=='human':
-            pass
+        return rendered_taxi
 
-
-        return taxi_rendering
-
-    def _get_action_space(self):
-        '''return discrete action space for env'''
-
-        return self.action_space
 
     def _get_current_info(self):
         '''return info dictionary for env'''
@@ -149,44 +111,15 @@ class TaxiEnv(gym.Env):
         #extract state information for info dict
         state_info = self.taxi_env.get_state()
 
-        taxi_position = state_info[0:2];  info['taxi'] = taxi_position
+        taxi_position = state_info[0:2];  info['taxi_x'] = taxi_position[1]; info['taxi_y'] = taxi_position[0]
 
         #store position + in-taxi information for each passenger
         for i in range(0,len(state_info[2:]),3):
 
-            info['p{}'.format(i)] = state_info[i:i+3]
+            p_y, p_x, p_in_taxi = state_info[i:i+3]
+
+            info['p{}_y'.format(i)] = p_y
+            info['p{}_x'.format(i)] = p_x
+            info['p{}_in_taxi'.format(i)] = p_in_taxi
 
         return info
-
-    def _render_gridworld(self, taxi_rgb_array, mode='rgb_array'):
-        '''function to render taxi world using classic_control.rendering'''
-
-        (height,width,channels) = taxi_rgb_array.shape
-
-        scale_factor = (self.screen_height//height, self.screen_width//width)
-
-        def gen_polygon(r,c):
-            return rendering.FilledPolygon([  (c*scale_factor[1], r*scale_factor[0]),
-                                            (c*scale_factor[1], (r+1)*scale_factor[0]),
-                                            ((c+1)*scale_factor[1],(r+1)*scale_factor[0]),
-                                            (c*scale_factor[1], (r+1)*scale_factor[0])
-                                            ])
-
-        #set up rendering if it doesn't exist
-        if self.viewer is None:
-            self.viewer = rendering.Viewer(self.screen_width, self.screen_height)
-
-        self.viewer.window.clear()
-
-        #populate viewer scrren with pixel values from rgb array
-        for r in range(height):
-            for c in range(width):
-
-                pixel = get_polygon(r,c)
-
-                pixel.set_color(tuple(taxi_rgb_array[r,c,:]/255))
-
-                self.viewer.add_geom(block)
-
-
-        return self.viewer.render(return_rgb_array = mode=='rgb_array')
