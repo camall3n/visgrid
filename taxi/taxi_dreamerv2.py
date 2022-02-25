@@ -32,12 +32,12 @@ config_data = {
     'log_every': 50, #number of steps to log video and metrics
     'eval_every': 50, #evaluate policy every 'k' steps: Actor-Critic
     'eval_eps': 1, #number of episodes to run evaluation?
-    'prefill': 300, #number of steps (in 1 epoch) to 'prefill' before world model sequencing [learning world model] [random agent acts for 'k' steps]
+    'prefill': 200, #number of steps (in 1 epoch) to 'prefill' before world model sequencing [learning world model] [random agent acts for 'k' steps]
     'pretrain': 1,
     'train_every': 5,
     'train_steps': 1,
     'expl_until': 0, #number of steps to initially explore
-    'replay': {'capacity': 300, 'ongoing': True, 'minlen': 10, 'maxlen': 30, 'prioritize_ends': True},
+    'replay': {'capacity': 200, 'ongoing': True, 'minlen': 10, 'maxlen': 30, 'prioritize_ends': True},
     'dataset': {'batch': 16, 'length': 50},
     'log_keys_video': ['image'],
     'log_keys_sum': '^$',
