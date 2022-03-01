@@ -115,15 +115,17 @@ class TaxiEnv(gym.Env):
         #extract state information for info dict
         state_info = self.taxi_env.get_state()
 
-        taxi_position = state_info[0:2];  info['taxi_x'] = taxi_position[1]; info['taxi_y'] = taxi_position[0]
+        taxi_position = state_info[0:2]
+        info['taxi_col'] = taxi_position[1]
+        info['taxi_row'] = taxi_position[0]
 
         #store position + in-taxi information for each passenger
         for i in range(0,len(state_info[2:]),3):
 
-            p_y, p_x, p_in_taxi = state_info[i:i+3]
+            p_row, p_col, p_in_taxi = state_info[i:i+3]
 
-            info['p{}_y'.format(i)] = p_y
-            info['p{}_x'.format(i)] = p_x
+            info['p{}_row'.format(i)] = p_row
+            info['p{}_col'.format(i)] = p_col
             info['p{}_in_taxi'.format(i)] = p_in_taxi
 
         return info
