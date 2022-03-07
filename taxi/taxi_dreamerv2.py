@@ -1,7 +1,7 @@
 
 #importing gym and dreamer v2 api
 import gym
-import dreamerv2.api as dreamer_v2
+import dreamerv2.dreamerv2.api as dreamer_v2
 from dreamerv2.dreamerv2 import common
 import gym_minigrid
 from visgrid.taxi.taxi_gym_env import TaxiEnv
