@@ -67,7 +67,9 @@ class TaxiEnv(gym.Env):
 
         info['timeout'] = timeout
         info['is_terminal'] = is_terminal
-
+        self.observation_space = taxi_rendering
+        print('action: ', action, ' | reward: ', reward) 
+        print('done step: ', is_terminal or timeout)
         return taxi_rendering, reward, is_terminal or timeout, info
 
     def reset(self):
@@ -85,7 +87,8 @@ class TaxiEnv(gym.Env):
 
         #reset step count to 0
         self.T = 0
-
+        
+        self.observation_space = rendered_taxi
         return rendered_taxi
 
     def render(self, mode='rgb_array'):

@@ -9,6 +9,7 @@ from ..gridworld.gridworld import GridWorld
 from ..gridworld.objects.passenger import Passenger
 from ..gridworld.objects.depot import Depot
 from visgrid import utils
+import pdb
 
 class TaxiGrid5x5(BaseGrid):
     depot_locs = {# yapf: disable
@@ -95,7 +96,11 @@ class BaseTaxi(GridWorld):
         if explore:
             # Fully randomize agent position
             self.agent.position = self.get_random_position()
-
+            
+            self.agent.position = self.depots[self.passengers[0].color].position
+            #pdb.set_trace()
+            
+             
             # Fully randomize passenger positions (without overlap)
             if self.passengers:
                 passenger_positions = np.stack(
@@ -107,13 +112,13 @@ class BaseTaxi(GridWorld):
                     p.position = passenger_positions[i]
 
                 # Randomly decide if one passenger should be at the taxi
-                if random.random() > 0.5:
+                if random.random() > 0.0:
                     # If so, randomly choose which passenger
                     p = random.choice(self.passengers)
                     p.position = self.agent.position
 
                     # Randomly decide if that passenger should be *in* the taxi
-                    if random.random() > 0.5:
+                    if random.random() > 0.0:
                         p.intaxi = True
                         self.passenger = p
 
@@ -184,6 +189,8 @@ class BaseTaxi(GridWorld):
         return image
 
     def step(self, action):
+        pickup = False; bad_dropoff = False; good_dropoff = False; bad_pickup = False
+
         if action < 4:
             super().step(action)
             for p in self.passengers:
@@ -197,23 +204,57 @@ class BaseTaxi(GridWorld):
                     if (self.agent.position == p.position).all():
                         p.intaxi = True
                         self.passenger = p
+                        pickup = True
                         break  # max one passenger per taxi
+		
+                if not pickup:
+                    bad_pickup = True
             else:
                 # drop off?
                 dropoff_clear = True
                 for p in (p for p in self.passengers if p is not self.passenger):
                     if (p.position == self.passenger.position).all():
                         dropoff_clear = False
+                        bad_dropoff = True
                         break
+
                 if dropoff_clear:
                     self.passenger.intaxi = False
+                    
+		    #drop of current passenger at right depot
+                    depot_position = self.depots[self.passenger.goal].position
+
+                    if np.all(depot_position==self.passenger.position):
+                        good_dropoff = True
+                    else:
+                        bad_dropoff = True
+
                     self.passenger = None
+		    
+		    
+
         s = self.get_state()
         if (self.goal is not None) or not self.check_goal(s):
             done = False
         else:
             done = True
-        r = -1.0 if not done else 1000
+
+
+        r = 0.0 if not done else 1.0
+
+        #if pickup:
+        #    r = +5.0
+        #elif action==4 and (bad_dropoff or bad_pickup):
+        #   r = -10.0
+        #elif action==4 and good_dropoff:
+        #    r = +20.0
+        #else:
+        #    r = -1.0
+
+        #if done:
+        #    r = +1000
+	
+
         return s, r, done
 
     def get_state(self):
