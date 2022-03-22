@@ -209,7 +209,7 @@ class BaseTaxi(GridWorld):
                     self.passenger.intaxi = False
                     self.passenger = None
         s = self.get_state()
-        if (self.goal is not None) or not self.check_goal(s):
+        if (self.goal is None) or not self.check_goal(s):
             done = False
         else:
             done = True
