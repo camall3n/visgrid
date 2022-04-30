@@ -97,7 +97,7 @@ class BaseTaxi(GridWorld):
             # Fully randomize agent position
             self.agent.position = self.get_random_position()
             
-            self.agent.position = self.depots[self.passengers[0].color].position
+            #self.agent.position = self.depots[self.passengers[0].color].position
             #pdb.set_trace()
             
              
@@ -112,13 +112,13 @@ class BaseTaxi(GridWorld):
                     p.position = passenger_positions[i]
 
                 # Randomly decide if one passenger should be at the taxi
-                if random.random() > 0.0:
+                if random.random() > 0.5:
                     # If so, randomly choose which passenger
                     p = random.choice(self.passengers)
                     p.position = self.agent.position
 
                     # Randomly decide if that passenger should be *in* the taxi
-                    if random.random() > 0.0:
+                    if random.random() > 0.5:
                         p.intaxi = True
                         self.passenger = p
 
@@ -240,21 +240,23 @@ class BaseTaxi(GridWorld):
             done = True
 
 
-        r = 0.0 if not done else 1.0
-
-        #if pickup:
-        #    r = +5.0
-        #elif action==4 and (bad_dropoff or bad_pickup):
-        #   r = -10.0
-        #elif action==4 and good_dropoff:
-        #    r = +20.0
-        #else:
-        #    r = -1.0
+        #r = 0.0 if not done else 1.0
+        
+        if pickup:
+            r = +5.0
+        elif action==4 and (bad_dropoff or bad_pickup):
+           r = -10.0
+        elif action==4 and good_dropoff:
+            r = +20.0
+        else:
+            r = -1.0
 
         #if done:
-        #    r = +1000
-	
-
+        #    r = +100
+        if r==0:
+            pdb.set_trace()
+            print(s) 
+        
         return s, r, done
 
     def get_state(self):
