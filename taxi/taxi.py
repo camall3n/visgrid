@@ -92,7 +92,7 @@ class BaseTaxi(GridWorld):
         else:
             self.goal = None
 
-        if explore:
+        while explore:
             # Fully randomize agent position
             self.agent.position = self.get_random_position()
 
@@ -116,6 +116,10 @@ class BaseTaxi(GridWorld):
                     if random.random() > 0.5:
                         p.intaxi = True
                         self.passenger = p
+
+            s = self.get_state()
+            if (self.goal is None) or not self.check_goal(s):
+                break
 
         return self.get_state()
 
