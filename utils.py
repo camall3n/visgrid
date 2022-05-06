@@ -5,7 +5,7 @@ import numpy as np
 import os
 import random
 from sklearn.neighbors import KernelDensity
-import torch
+#import torch
 
 def manhattan_dist(pos1, pos2):
     x1, y1 = pos1
