@@ -136,10 +136,15 @@ class BaseTaxi(GridWorld):
             p.plot(ax, linewidth_multiplier=linewidth_multiplier)
 
     def render(self):
-        wall_width = 2
-        cell_width = 13
-        passenger_width = 9
-        depot_width = 3
+        wall_width = self.wall_width
+        cell_width = self.cell_width
+        passenger_width = self.passenger_width
+        depot_width = self.depot_width
+        banner_widths = self.banner_widths
+        dash_widths = self.dash_widths
+        img_width = self._cols * cell_width + (self._cols + 1) * wall_width + sum(banner_widths)
+        img_height = self._rows * cell_width + (self._rows + 1) * wall_width + sum(banner_widths)
+        img_shape = (img_height, img_width)
 
         walls = expand_grid(self._grid, cell_width, wall_width)
         walls = to_rgb(walls) * get_rgb('dimgray') / 8
@@ -176,11 +181,15 @@ class BaseTaxi(GridWorld):
         # construct border
         in_taxi = (self.passenger is not None)
         border_color = get_rgb('white' if self.grayscale or not in_taxi else self.passenger.color)
-        image = generate_border(in_taxi, border_color)
+        image = generate_border(in_taxi,
+                                img_shape=img_shape,
+                                dash_widths=dash_widths,
+                                color=border_color)
 
         # insert content on top of border
         content = bg + objects
-        image[4:-3, 4:-3, :] = content
+        pad_top_left, pad_bot_right = self.banner_widths
+        image[pad_top_left:-pad_bot_right, pad_top_left:-pad_bot_right, :] = content
 
         if self.grayscale:
             image = np.mean(image, axis=-1, keepdims=True)
@@ -269,7 +278,23 @@ class Taxi5x5(BaseTaxi, TaxiGrid5x5):
         self.passengers = [Passenger(color='gray') for _ in range(n_passengers)]
 
 class VisTaxi5x5(Taxi5x5):
-    def __init__(self, grayscale=True, *args, **kwargs):
+    def __init__(self,
+                 wall_width=2,
+                 cell_width=13,
+                 passenger_width=9,
+                 depot_width=3,
+                 banner_widths=(4, 3),
+                 dash_widths=(6, 6),
+                 grayscale=True,
+                 *args,
+                 **kwargs):
+        self.wall_width = wall_width
+        self.cell_width = cell_width
+        self.passenger_width = passenger_width
+        self.depot_width = depot_width
+        self.banner_widths = banner_widths
+        self.dash_widths = dash_widths
+
         super().__init__(*args, **kwargs)
         self.grayscale = grayscale
 
@@ -396,17 +421,23 @@ def taxi_patch(cell_width, depot_width, passenger_width):
 
     return taxi_patch
 
-def generate_border(in_taxi, color=None):
+def generate_border(in_taxi, img_shape=(84, 84), dash_widths=(6, 6), color=None):
     """Generate a border to reflect the current in_taxi status"""
     if in_taxi:
         # pad with dashes to 84x84
+        dw_r, dw_c = dash_widths
+        n_repeats = (img_shape[0] // (2 * dw_r), img_shape[1] // (2 * dw_c))
         image = np.tile(
-            np.block([[np.ones((6, 6)), np.zeros((6, 6))], [np.zeros((6, 6)),
-                                                            np.ones((6, 6))]]), (7, 7))
+            np.block([
+                [np.ones((dw_r, dw_c)), np.zeros((dw_r, dw_c))],
+                [np.zeros((dw_r, dw_c)), np.ones((dw_r, dw_c))],
+            ]), n_repeats)
+
+        # convert to color 84x84x3
         image = np.tile(np.expand_dims(image, -1), (1, 1, 3))
         image = image * color
     else:
-        # pad with white to 84x84
-        image = np.ones((84, 84, 3))
+        # pad with white to 84x84x3
+        image = np.ones(img_shape + (3, ))
 
     return image
