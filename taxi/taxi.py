@@ -199,6 +199,7 @@ class BaseTaxi(GridWorld):
         return image
 
     def step(self, action):
+        # TODO: prevent multiple passengers from overlapping in same grid cell
         if action < 4:
             super().step(action)
             for p in self.passengers:
@@ -276,7 +277,7 @@ class Taxi5x5(BaseTaxi, TaxiGrid5x5):
 
     def __init__(self, n_passengers=1):
         super().__init__()
-        assert 0 <= n_passengers <= 3, "'n_passengers' must be between 0 and 7"
+        assert 0 <= n_passengers <= 3, "'n_passengers' must be between 0 and 3"
         self.passengers = [Passenger(color='gray') for _ in range(n_passengers)]
 
 class VisTaxi5x5(Taxi5x5):
