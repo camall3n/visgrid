@@ -136,7 +136,6 @@ class BaseTaxi(GridWorld):
             p.plot(ax, linewidth_multiplier=linewidth_multiplier)
 
     def render(self):
-
         image = self._render(self._grid, self.agent, self.passengers, self.depots, self.dimensions)
         if self.grayscale:
             image = np.mean(image, axis=-1, keepdims=True)
