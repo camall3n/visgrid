@@ -10,7 +10,7 @@ env.reset_agent()
 sensor = SensorChain([
     OffsetSensor(offset=(0.5, 0.5)),
     NoisySensor(sigma=0.05),
-    ImageSensor(range=((0, env._rows), (0, env._cols)), pixel_density=3),
+    ImageSensor(range=((0, env.rows), (0, env.cols)), pixel_density=3),
     # ResampleSensor(scale=2.0),
     BlurSensor(sigma=0.6, truncate=1.),
     NoisySensor(sigma=0.01)

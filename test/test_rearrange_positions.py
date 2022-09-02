@@ -33,15 +33,15 @@ env = GridWorld(rows=args.rows, cols=args.cols)
 cmap = None
 
 sensor = SensorChain([
-    RearrangeXYPositionsSensor((env._rows, env._cols))
+    RearrangeXYPositionsSensor((env.rows, env.cols))
     # OffsetSensor(offset=(0.5, 0.5)),
     # NoisySensor(sigma=0.05),
-    # ImageSensor(range=((0, env._rows), (0, env._cols)), pixel_density=3),
+    # ImageSensor(range=((0, env.rows), (0, env.cols)), pixel_density=3),
     # # ResampleSensor(scale=2.0),
     # BlurSensor(sigma=0.6, truncate=1.),
     # NoisySensor(sigma=0.01)
 ])
-image_sensor = ImageSensor(range=((0, env._rows), (0, env._cols)), pixel_density=1)
+image_sensor = ImageSensor(range=((0, env.rows), (0, env.cols)), pixel_density=1)
 
 #%% ------------------ Generate experiences ------------------
 n_samples = 50000
@@ -72,7 +72,7 @@ for t in range(n_samples):
     # actions.append(a)
 # states = np.stack(states)
 # s0 = np.asarray(states[:-1, :])
-# c0 = s0[:, 0] * env._cols + s0[:, 1]
+# c0 = s0[:, 0] * env.cols + s0[:, 1]
 # s1 = np.asarray(states[1:, :])
 # a = np.asarray(actions)
 

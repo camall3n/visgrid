@@ -7,25 +7,33 @@ from .components import grid
 from .components.agent import Agent
 from .components.depot import Depot
 
-class GridWorld(grid.BaseGrid):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+class GridWorld:
+    def __init__(self, rows, cols):
+        self.grid = grid.BaseGrid(rows, cols)
         self.agent = Agent()
         self.actions = [i for i in range(4)]
         self.action_map = grid.directions
         self.agent.position = np.asarray((0, 0), dtype=int)
         self.goal = None
 
+    @property
+    def rows(self):
+        return self.grid._rows
+
+    @property
+    def cols(self):
+        return self.grid._cols
+
     def reset_agent(self):
-        self.agent.position = self.get_random_position()
+        self.agent.position = self.grid.get_random_position()
         at = lambda x, y: np.all(x.position == y.position)
         while (self.goal is not None) and at(self.agent, self.goal):
-            self.agent.position = self.get_random_position()
+            self.agent.position = self.grid.get_random_position()
 
     def reset_goal(self):
         if self.goal is None:
             self.goal = Depot()
-        self.goal.position = self.get_random_position()
+        self.goal.position = self.grid.get_random_position()
         self.reset_agent()
 
     def check_goal(self):
@@ -34,7 +42,7 @@ class GridWorld(grid.BaseGrid):
     def step(self, action):
         assert (action in range(4))
         direction = self.action_map[action]
-        if not self.has_wall(self.agent.position, direction):
+        if not self.grid.has_wall(self.agent.position, direction):
             self.agent.position += direction
         s = self.get_state()
         if self.goal:
@@ -49,13 +57,15 @@ class GridWorld(grid.BaseGrid):
     def can_run(self, action):
         assert (action in range(4))
         direction = self.action_map[action]
-        return False if self.has_wall(self.agent.position, direction) else True
+        return False if self.grid.has_wall(self.agent.position, direction) else True
 
     def get_state(self):
         return np.copy(self.agent.position)
 
     def plot(self, ax=None, draw_bg_grid=True, linewidth_multiplier=1.0, plot_goal=True):
-        ax = super().plot(ax, draw_bg_grid=draw_bg_grid, linewidth_multiplier=linewidth_multiplier)
+        ax = self.grid.plot(ax,
+                            draw_bg_grid=draw_bg_grid,
+                            linewidth_multiplier=linewidth_multiplier)
         if self.agent:
             self.agent.plot(ax, linewidth_multiplier=linewidth_multiplier)
         if self.goal and plot_goal:
@@ -80,12 +90,12 @@ class TestWorld(GridWorld):
 class RingWorld(GridWorld):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for r in range(self._rows - 2):
+        for r in range(self.rows - 2):
             self._grid[2 * r + 3, 2] = 1
-            self._grid[2 * r + 3, 2 * self._cols - 2] = 1
-        for c in range(self._cols - 2):
+            self._grid[2 * r + 3, 2 * self.cols - 2] = 1
+        for c in range(self.cols - 2):
             self._grid[2, 2 * c + 3] = 1
-            self._grid[2 * self._rows - 2, 2 * c + 3] = 1
+            self._grid[2 * self.rows - 2, 2 * c + 3] = 1
 
 class SnakeWorld(GridWorld):
     def __init__(self):
@@ -107,8 +117,8 @@ class MazeWorld(GridWorld):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         walls = []
-        for row in range(0, self._rows):
-            for col in range(0, self._cols):
+        for row in range(0, self.rows):
+            for col in range(0, self.cols):
                 #add vertical walls
                 self._grid[row * 2 + 2, col * 2 + 1] = 1
                 walls.append((row * 2 + 2, col * 2 + 1))
@@ -121,8 +131,8 @@ class MazeWorld(GridWorld):
 
         cells = []
         #add each cell as a set_text
-        for row in range(0, self._rows):
-            for col in range(0, self._cols):
+        for row in range(0, self.rows):
+            for col in range(0, self.cols):
                 cells.append({(row * 2 + 1, col * 2 + 1)})
 
         #Randomized Kruskal's Algorithm
@@ -185,8 +195,8 @@ class SpiralWorld(GridWorld):
         super().__init__(*args, **kwargs)
 
         # Add all walls
-        for row in range(0, self._rows):
-            for col in range(0, self._cols):
+        for row in range(0, self.rows):
+            for col in range(0, self.cols):
                 #add vertical walls
                 self._grid[row * 2 + 2, col * 2 + 1] = 1
 
@@ -194,13 +204,13 @@ class SpiralWorld(GridWorld):
                 self._grid[row * 2 + 1, col * 2 + 2] = 1
 
         # Check dimensions to decide on appropriate spiral direction
-        if self._cols > self._rows:
+        if self.cols > self.rows:
             direction = 'cw'
         else:
             direction = 'ccw'
 
         # Remove walls to build spiral
-        for i in range(0, min(self._rows, self._cols)):
+        for i in range(0, min(self.rows, self.cols)):
             # Create concentric hooks, and connect them after the first to build spiral
             if direction == 'ccw':
                 self._grid[(2 * i + 1):-(2 * i + 1), (2 * i + 1)] = 0
@@ -223,7 +233,7 @@ class LoopWorld(SpiralWorld):
         super().__init__(*args, **kwargs)
 
         # Check dimensions to decide on appropriate spiral direction
-        if self._cols > self._rows:
+        if self.cols > self.rows:
             direction = 'cw'
         else:
             direction = 'ccw'
