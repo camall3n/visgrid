@@ -31,7 +31,6 @@ class BaseGrid:
 
         # Add rows and columns for walls between cells
         self._grid = np.ones([rows * 2 + 1, cols * 2 + 1], dtype=grid_type)
-        self._contents = np.empty([rows * 2 + 1, cols * 2 + 1], dtype=np.object)
         self.saved_directions = {}
 
         # Reset valid positions and walls
@@ -42,9 +41,6 @@ class BaseGrid:
         if seed is not None:
             seeding.seed(seed, np)
         return np.asarray((np.random.randint(0, self._rows), np.random.randint(0, self._cols)))
-
-    def contents(self, row, col):
-        return self._contents[row // 2, col // 2]
 
     def plot(self, ax=None, draw_bg_grid=True, linewidth_multiplier=1.0):
         scale = 3 / 5
@@ -102,18 +98,6 @@ class BaseGrid:
         wall_col = 2 * col + 1 + d_col
         return self._grid[wall_row, wall_col]
 
-    def add_random_walls(self, n_walls=1):
-        types = ['vertical']
-        for i in range(n_walls):
-            type = np.random.choice(types)
-            if type == 'horizontal':
-                row = 2 + 2 * np.random.choice(self._rows - 1)
-                col = 1 + 2 * np.random.choice(self._cols - 1)
-            else:
-                row = 1 + 2 * np.random.choice(self._rows - 1)
-                col = 2 + 2 * np.random.choice(self._cols - 1)
-            self._grid[row, col] = 1
-
     def save(self, filename):
         np.savetxt(filename, self._grid.astype(int), fmt='%1d')
 
@@ -123,4 +107,3 @@ class BaseGrid:
         self._rows = r // 2
         self._cols = c // 2
         self._grid = grid
-        self._contents = np.empty_like(self._grid, dtype=np.object)
