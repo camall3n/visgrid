@@ -3,9 +3,9 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 
-from . import grid
-from .objects.agent import Agent
-from .objects.depot import Depot
+from .components import grid
+from .components.agent import Agent
+from .components.depot import Depot
 
 class GridWorld(grid.BaseGrid):
     def __init__(self, *args, **kwargs):
