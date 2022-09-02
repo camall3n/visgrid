@@ -8,11 +8,30 @@ from .components.agent import Agent
 from .components.depot import Depot
 
 class GridWorld:
+    # Offsets:
+    LEFT = np.asarray((0, -1))
+    RIGHT = np.asarray((0, 1))
+    UP = np.asarray((-1, 0))
+    DOWN = np.asarray((1, 0))
+
+    _action_offsets = {
+        0: LEFT,
+        1: RIGHT,
+        2: UP,
+        3: DOWN,
+    }
+
+    _action_ids = {
+        tuple(LEFT): 0,
+        tuple(RIGHT): 1,
+        tuple(UP): 2,
+        tuple(DOWN): 3,
+    }
+
     def __init__(self, rows, cols):
-        self.grid = grid.BaseGrid(rows, cols)
+        self.grid = grid.Grid(rows, cols)
         self.agent = Agent()
         self.actions = [i for i in range(4)]
-        self.action_map = grid.directions
         self.agent.position = np.asarray((0, 0), dtype=int)
         self.goal = None
 
@@ -41,7 +60,7 @@ class GridWorld:
 
     def step(self, action):
         assert (action in range(4))
-        direction = self.action_map[action]
+        direction = self._action_offsets[action]
         if not self.grid.has_wall(self.agent.position, direction):
             self.agent.position += direction
         s = self.get_state()
@@ -56,7 +75,7 @@ class GridWorld:
 
     def can_run(self, action):
         assert (action in range(4))
-        direction = self.action_map[action]
+        direction = self._action_offsets[action]
         return False if self.grid.has_wall(self.agent.position, direction) else True
 
     def get_state(self):

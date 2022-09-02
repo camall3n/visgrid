@@ -2,27 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seeding
 
-grid_type = int
-
-# Offsets:
-LEFT = np.asarray((0, -1))
-RIGHT = np.asarray((0, 1))
-UP = np.asarray((-1, 0))
-DOWN = np.asarray((1, 0))
-directions = {
-    0: LEFT,
-    1: RIGHT,
-    2: UP,
-    3: DOWN,
-}
-actions = {
-    tuple(LEFT): 0,
-    tuple(RIGHT): 1,
-    tuple(UP): 2,
-    tuple(DOWN): 3,
-}
-
-class BaseGrid:
+class Grid:
     def __init__(self, rows, cols):
         self._rows = rows
         self._cols = cols
@@ -30,7 +10,7 @@ class BaseGrid:
         self.wall_color = 'C0'
 
         # Add rows and columns for walls between cells
-        self._grid = np.ones([rows * 2 + 1, cols * 2 + 1], dtype=grid_type)
+        self._grid = np.ones([rows * 2 + 1, cols * 2 + 1], dtype=int)
         self.saved_directions = {}
 
         # Reset valid positions and walls
@@ -102,7 +82,7 @@ class BaseGrid:
         np.savetxt(filename, self._grid.astype(int), fmt='%1d')
 
     def load(self, filename):
-        grid = np.loadtxt(filename, dtype=grid_type)
+        grid = np.loadtxt(filename, dtype=int)
         r, c = grid.shape
         self._rows = r // 2
         self._cols = c // 2

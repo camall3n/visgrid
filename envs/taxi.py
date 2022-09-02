@@ -4,13 +4,13 @@ import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import scipy.ndimage
 import random
-from .components.grid import BaseGrid
+from .components.grid import Grid
 from .gridworld import GridWorld
 from .components.passenger import Passenger
 from .components.depot import Depot
 from visgrid import utils
 
-class TaxiGrid5x5(BaseGrid):
+class TaxiGrid5x5(Grid):
     depot_locs = {# yapf: disable
         'red':    (0, 0),
         'yellow': (4, 0),
@@ -25,7 +25,7 @@ class TaxiGrid5x5(BaseGrid):
         self._grid[7:10, 2] = 1
         self._grid[7:10, 6] = 1
 
-class TaxiGrid10x10(BaseGrid):
+class TaxiGrid10x10(Grid):
     depot_locs = {# yapf: disable
         'red':     (0, 0),
         'blue':    (8, 0),
@@ -257,7 +257,7 @@ class BaseTaxi(GridWorld):
         else:
             return False
 
-class TaxiGoal(BaseGrid):
+class TaxiGoal(Grid):
     def __init__(self, passenger_goals):
         super().__init__(rows=1, cols=1 + len(passenger_goals))
         self._grid[:, :] = 0  # Clear walls
