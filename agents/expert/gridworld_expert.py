@@ -1,7 +1,7 @@
 from collections import defaultdict
 import numpy as np
-from ..utils import manhattan_dist
-from .grid import directions, actions
+from ...utils import manhattan_dist
+from ...envs.grid import directions, actions
 
 def GoToGridPosition(gridworld, start, target):
     start = tuple(start)

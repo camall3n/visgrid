@@ -1,7 +1,7 @@
 # %matplotlib inline
 import random
-from visgrid.taxi.skills import *
-from visgrid.taxi.taxi import *
+from visgrid.agents.expert.taxi_expert import *
+from visgrid.envs.taxi import *
 
 random.seed(0)
 w = Taxi10x10()

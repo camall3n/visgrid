@@ -4,10 +4,10 @@ import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import scipy.ndimage
 import random
-from ..gridworld.grid import BaseGrid
-from ..gridworld.gridworld import GridWorld
-from ..gridworld.objects.passenger import Passenger
-from ..gridworld.objects.depot import Depot
+from .grid import BaseGrid
+from .gridworld import GridWorld
+from .objects.passenger import Passenger
+from .objects.depot import Depot
 from visgrid import utils
 
 class TaxiGrid5x5(BaseGrid):

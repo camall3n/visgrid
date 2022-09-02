@@ -1,7 +1,7 @@
 import random
-from visgrid.taxi.taxi import Taxi5x5
+from visgrid.envs.taxi import Taxi5x5
 from visgrid.agents.qlearningagent import SkilledQLearningAgent
-from visgrid.taxi.skills import skills5x5, skill_policy
+from visgrid.agents.expert.taxi_expert import skills5x5, skill_policy
 from visgrid.sensors import IdentitySensor
 
 total_timesteps = 50000

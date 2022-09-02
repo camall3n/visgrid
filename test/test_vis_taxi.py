@@ -6,7 +6,7 @@ import scipy.ndimage
 import seeding
 from tqdm import tqdm
 
-from visgrid.gridworld import GridWorld
+from visgrid.envs import GridWorld
 from visgrid.taxi import VisTaxi5x5
 from visgrid.sensors import *
 

@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from visgrid.gridworld import GridWorld
+from visgrid.envs import GridWorld
 from visgrid.sensors import *
 
 env = GridWorld(rows=6, cols=6)

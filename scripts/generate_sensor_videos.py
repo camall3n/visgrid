@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import seeding
 from tqdm import tqdm
 
-from visgrid.gridworld import GridWorld
+from visgrid.envs import GridWorld
 from visgrid.sensors import *
 
 env = GridWorld(rows=6,cols=6)

@@ -10,7 +10,7 @@ import time
 import torch
 from tqdm import tqdm
 
-from visgrid.gridworld import GridWorld
+from visgrid.envs import GridWorld
 from visgrid.utils import get_parser
 from visgrid.sensors import *
 

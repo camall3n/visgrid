@@ -6,7 +6,7 @@ import numpy as np
 import seeding
 from tqdm import tqdm
 
-from visgrid.gridworld import MazeWorld
+from visgrid.envs import MazeWorld
 
 rows = 6
 cols = 6

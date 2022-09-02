@@ -1,6 +1,6 @@
 import numpy as np
 
-from visgrid.gridworld import skills
+from visgrid.agents.expert import gridworld_expert
 
 class DistanceOracle:
     def __init__(self, env):
@@ -9,14 +9,15 @@ class DistanceOracle:
         for s in states:
             for sp in states:
                 # Pre-compute all pairwise distances
-                skills.GoToGridPosition(env, s, sp)
+                gridworld_expert.GoToGridPosition(env, s, sp)
 
     def pairwise_distances(self, indices, s0, s1):
         init_states = s0[indices]
         next_states = s1[indices]
 
         distances = [
-            skills.GoToGridPosition(self.env, s, sp)[1] for s, sp in zip(init_states, next_states)
+            gridworld_expert.GoToGridPosition(self.env, s, sp)[1]
+            for s, sp in zip(init_states, next_states)
         ]
 
         return distances
@@ -27,8 +28,8 @@ if __name__ == '__main__':
     import numpy as np
     import random
 
-    from visgrid.gridworld import GridWorld, MazeWorld, SpiralWorld
-    from visgrid.gridworld import grid
+    from visgrid.envs import GridWorld, MazeWorld, SpiralWorld
+    from visgrid.envs import grid
     import matplotlib.pyplot as plt
 
     grid.directions[3]

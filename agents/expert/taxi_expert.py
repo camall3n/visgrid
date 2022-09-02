@@ -1,6 +1,6 @@
 import numpy as np
-from .taxi import TaxiGrid5x5, TaxiGrid10x10
-from ..gridworld.skills import GoToGridPosition
+from ...envs.taxi import TaxiGrid5x5, TaxiGrid10x10
+from .gridworld_expert import GoToGridPosition
 
 skills5x5 = ['interact'] + list(TaxiGrid5x5.depot_names)
 skills10x10 = ['interact'] + list(TaxiGrid10x10.depot_names)
