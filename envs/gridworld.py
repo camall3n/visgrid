@@ -32,14 +32,15 @@ class GridworldEnv:
         tuple(DOWN): 3,
     }
 
-    _default_dimensions = {
-        'wall_width': 4,
-        'cell_width': 24,
-        'character_width': 16,
-        'depot_width': 8,
-        'border_widths': (0, 0),
+    dimensions_6x6_to_64x64 = {
+        'wall_width': 1,
+        'cell_width': 9,
+        'character_width': 5,
+        'depot_width': 2,
+        'border_widths': (2, 1),
         'img_shape': (64, 64),
     }
+    _default_dimensions = dimensions_6x6_to_64x64
 
     def __init__(self,
                  rows: int,
