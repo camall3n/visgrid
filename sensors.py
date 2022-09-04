@@ -34,6 +34,13 @@ class ClipSensor(Sensor):
     def __call__(self, s):
         return np.clip(s, self.limit_min, self.limit_max)
 
+class GrayscaleSensor(Sensor):
+    def __init__(self, axis=-1) -> None:
+        self.axis = axis
+
+    def __call__(self, s):
+        return np.mean(s, axis=self.axis)
+
 class RearrangeXYPositionsSensor(Sensor):
     """Rearrange discrete x-y positions to break smoothness
     """
