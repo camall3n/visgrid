@@ -260,6 +260,7 @@ class TaxiEnv(GridworldEnv):
             color = self.depot_names[goal_depot_id]
             p = Passenger((row, col), color)
             p.in_taxi = in_taxi
+            self.passengers.append(p)
 
     def get_goal_state(self) -> np.ndarray:
         state = []
