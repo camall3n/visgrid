@@ -207,8 +207,11 @@ class GridworldEnv:
     # ------------------------------------------------------------
 
     def plot(self):
-        ob = self.render()
+        ob = self.get_observation()
         plt.imshow(ob)
+        plt.xticks([])
+        plt.yticks([])
+        plt.show()
 
     def render(self, state=None) -> np.ndarray:
         current_state = self.get_state()
