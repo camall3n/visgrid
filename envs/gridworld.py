@@ -1,4 +1,5 @@
 import warnings
+from typing import Tuple
 
 from cv2 import resize, INTER_AREA, INTER_LINEAR
 import matplotlib.pyplot as plt
@@ -47,6 +48,8 @@ class GridworldEnv:
                  terminate_on_goal: bool = True,
                  fixed_goal: bool = True,
                  hidden_goal: bool = False,
+                 agent_position: Tuple = None,
+                 goal_position: Tuple = None,
                  image_observations: bool = True,
                  sensor: Sensor = None,
                  dimensions: dict = None):
@@ -59,19 +62,23 @@ class GridworldEnv:
         self.sensor = sensor if sensor is not None else Sensor()
         self.dimensions = dimensions if dimensions is not None else self._default_dimensions
         self.actions = [i for i in range(4)]
-        self._initialize_agent()
-        self._initialize_depots()
+        self._initialize_agent(agent_position)
+        self._initialize_depots(goal_position)
 
     # ------------------------------------------------------------
     # Initialization
     # ------------------------------------------------------------
 
-    def _initialize_agent(self):
-        self.agent = Agent(self.grid.get_random_position())
+    def _initialize_agent(self, position=None):
+        if position is None:
+            position = self.grid.get_random_position()
+        self.agent = Agent(position)
         self._agent_initial_position = self.agent.position.copy()
 
-    def _initialize_depots(self):
-        self.goal = Depot(self.grid.get_random_position(), color='red')
+    def _initialize_depots(self, position=None):
+        if position is None:
+            position = self.grid.get_random_position()
+        self.goal = Depot(position, color='red')
         self.depots = {'red': self.goal}
 
     # ------------------------------------------------------------
@@ -115,16 +122,16 @@ class GridworldEnv:
     # ------------------------------------------------------------
 
     def _reset(self):
+        if not self.fixed_goal:
+            self.goal.position = self.grid.get_random_position()
+
         if self.exploring_starts:
             while True:
                 self.agent.position = self.grid.get_random_position()
                 if not (self.terminate_on_goal and self._check_goal()):
                     break
         else:
-            self.agent_position = self._agent_initial_position
-
-        if not self.fixed_goal:
-            self.goal.position = self.grid.get_random_position()
+            self.agent.position = self._agent_initial_position
 
     def reset(self):
         self._reset()
