@@ -47,6 +47,7 @@ class TaxiEnv(GridworldEnv):
                          exploring_starts=exploring_starts,
                          terminate_on_goal=terminate_on_goal,
                          fixed_goal=False,
+                         hidden_goal=False,
                          image_observations=image_observations,
                          sensor=sensor,
                          dimensions=dimensions)
