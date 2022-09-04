@@ -22,6 +22,7 @@ def get_good_color(color):
     colorname = 'c' if colorname == 'cyan' else colorname
     colorname = 'm' if colorname == 'magenta' else colorname
     colorname = 'silver' if colorname in ['gray', 'grey'] else colorname
+    colorname = 'xkcd:almost black' if colorname == 'almost black' else colorname
     return colorname
 
 def get_rgb(colorname: str):

@@ -267,7 +267,7 @@ class GridworldEnv:
     def _render_objects(self) -> dict:
         walls = self.grid.render(cell_width=self.dimensions['cell_width'],
                                  wall_width=self.dimensions['wall_width'])
-        walls = utils.to_rgb(walls, 'dimgray') / 8
+        walls = utils.to_rgb(walls, 'almost black')
 
         depot_patches = np.zeros_like(walls)
         for depot in self.depots.values():
