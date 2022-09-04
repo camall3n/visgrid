@@ -192,7 +192,7 @@ class GridworldEnv:
     def _check_goal(self, state=None):
         if state is None:
             state = self.get_state()
-        for depot in self.depots:
+        for depot in self.depots.values():
             if np.all(state[:2] == depot.position):
                 return True
         return False

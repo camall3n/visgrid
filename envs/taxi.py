@@ -236,7 +236,8 @@ class TaxiEnv(GridworldEnv):
                 # dropoff
                 if not self.depot_dropoff_only:
                     return True
-                elif any([(depot.position == self.agent.position).all() for depot in self.depots]):
+                elif any([(depot.position == self.agent.position).all()
+                          for depot in self.depots.values()]):
                     return True
                 return False
 
