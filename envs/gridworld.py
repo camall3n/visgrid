@@ -135,6 +135,8 @@ class GridworldEnv:
             self.agent.position = self._agent_initial_position
 
     def reset(self):
+        self._cached_state = None
+        self._cached_render = None
         self._reset()
         ob = self.get_observation(self.get_state())
         return ob
@@ -143,6 +145,8 @@ class GridworldEnv:
         """
         Execute action if it can run, then return the corresponding effects
         """
+        self._cached_state = None
+        self._cached_render = None
         if self.can_run(action):
             self._step(action)
 
@@ -208,9 +212,16 @@ class GridworldEnv:
 
     def render(self, state=None) -> np.ndarray:
         current_state = self.get_state()
-        if state is not None:
-            self.set_state(state)
-        return self._render()
+        try:
+            if state is not None:
+                self.set_state(state)
+            # only render observation once per step
+            if (self._cached_state is None) or (state != self._cached_state).any():
+                self._cached_state = state
+                self._cached_render = self._render()
+            return self._cached_render
+        finally:
+            self.set_state(current_state)
 
     def _render(self) -> np.ndarray:
         objects = self._render_objects()
