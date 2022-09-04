@@ -46,12 +46,14 @@ class GridworldEnv:
                  exploring_starts: bool = True,
                  terminate_on_goal: bool = True,
                  fixed_goal: bool = True,
+                 hidden_goal: bool = False,
                  image_observations: bool = True,
                  sensor: Sensor = None,
                  dimensions: dict = None):
         self.grid = Grid(rows, cols)
         self.exploring_starts = exploring_starts
         self.fixed_goal = fixed_goal
+        self.hidden_goal = hidden_goal
         self.terminate_on_goal = terminate_on_goal
         self.image_observations = image_observations
         self.sensor = sensor if sensor is not None else Sensor()
@@ -159,12 +161,9 @@ class GridworldEnv:
         return False if self.grid.has_wall(self.agent.position, direction) else True
 
     def get_state(self):
-        state = []
         row, col = self.agent.position
-        state.extend([row, col])
-        if not self.fixed_goal:
-            goal_row, goal_col = self.goal.position
-            state.extend([goal_row, goal_col])
+        goal_row, goal_col = self.goal.position
+        state = [row, col, goal_row, goal_col]
         return np.asarray(state, dtype=int)
 
     def set_state(self, state):
@@ -174,9 +173,13 @@ class GridworldEnv:
             goal_row, goal_col = remaining
             self.goal.position = goal_row, goal_col
 
-    def get_observation(self, state):
+    def get_observation(self, state=None):
+        if state is None:
+            state = self.get_state()
         if self.image_observations:
             state = self.render(state)
+        elif self.hidden_goal:
+            state = state[:2]
         return self.sensor(state)
 
     def _check_goal(self, state=None):
@@ -196,6 +199,7 @@ class GridworldEnv:
         plt.imshow(ob)
 
     def render(self, state=None) -> np.ndarray:
+        current_state = self.get_state()
         if state is not None:
             self.set_state(state)
         return self._render()
@@ -254,10 +258,11 @@ class GridworldEnv:
 
         objects = {
             'walls': walls,
+            'depots': depot_patches,
             'agent': agent_patches,
         }
-        if not self.fixed_goal:
-            objects['depots'] = depot_patches
+        if self.hidden_goal:
+            del objects['depots']
 
         return objects
 
