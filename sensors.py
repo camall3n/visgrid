@@ -63,7 +63,7 @@ class OffsetSensor(Sensor):
     def __call__(self, s):
         return s + self.offset
 
-class NoisySensor(Sensor):
+class NoiseSensor(Sensor):
     def __init__(self, sigma=0.1, truncation=None):
         self.sigma = sigma
         if truncation is not None:
