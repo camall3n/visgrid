@@ -30,7 +30,6 @@ assert env.get_observation().shape == (2, )
 #%% Test that sensor chain produces noisy images
 sensor = SensorChain([
     OffsetSensor(offset=(0.5, 0.5)),
-    NoiseSensor(sigma=0.05),
     ImageSensor(range=((0, env.rows), (0, env.cols)), pixel_density=3),
     BlurSensor(sigma=0.6, truncate=1.),
     NoiseSensor(sigma=0.01)
