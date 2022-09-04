@@ -1,11 +1,7 @@
 import argparse
-import glob
-import json
-import numpy as np
-import os
-import random
 
-import torch
+import numpy as np
+import matplotlib.colors as colors
 
 def manhattan_dist(pos1, pos2):
     x1, y1 = pos1
@@ -27,3 +23,18 @@ def get_good_color(color):
     colorname = 'm' if colorname == 'magenta' else colorname
     colorname = 'silver' if colorname in ['gray', 'grey'] else colorname
     return colorname
+
+def get_rgb(colorname: str):
+    good_color = get_good_color(colorname)
+    color_tuple = colors.hex2color(colors.get_named_colors_mapping()[good_color])
+    return np.asarray(color_tuple)
+
+def to_rgb(array: np.ndarray, color=None):
+    """Add a channel dimension with 3 entries"""
+    if array.ndim == 3 and array.shape[-1] == 3:
+        pass
+    else:
+        array = np.tile(array[:, :, np.newaxis], (1, 1, 3))
+    if color is not None:
+        array *= get_rgb(color)
+    return array

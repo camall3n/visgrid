@@ -4,9 +4,8 @@ from .basesprite import BaseSprite, pos2xy
 from visgrid import utils
 
 class Passenger(BaseSprite):
-    def __init__(self, position=(0, 0), goal='red', color='gray'):
+    def __init__(self, position=(0, 0), color: str = None):
         self.position = np.asarray(position)
-        self.goal = goal
         self.color = color
         self.in_taxi = False
 

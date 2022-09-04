@@ -1,34 +1,51 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from visgrid.envs import GridWorld
+from visgrid.envs import GridworldEnv
 from visgrid.sensors import *
 
-env = GridWorld(rows=6, cols=6)
-env.reset_agent()
+rows, cols = 6, 6
 
 sensor = SensorChain([
-    OffsetSensor(offset=(0.5, 0.5)),
-    NoisySensor(sigma=0.05),
-    ImageSensor(range=((0, env.rows), (0, env.cols)), pixel_density=3),
+    # OffsetSensor(offset=(0.5, 0.5)),
+    # NoisySensor(sigma=0.05),
+    # ImageSensor(range=((0, rows), (0, cols)), pixel_density=3),
     # ResampleSensor(scale=2.0),
-    BlurSensor(sigma=0.6, truncate=1.),
-    NoisySensor(sigma=0.01)
+    # BlurSensor(sigma=0.6, truncate=1.),
+    # NoisySensor(sigma=0.01)
 ])
+env = GridworldEnv(rows,
+                   cols,
+                   fixed_goal=False,
+                   terminate_on_goal=False,
+                   image_observations=False,
+                   sensor=sensor)
+env.reset()
+
+# #%%
+# obs = []
+# for _ in range(100):
+#     ob, reward, done, info = env.step(np.random.randint(4))
+#     obs.append(ob)
+# obs = np.stack(obs)
+
+# #%%
+# s = env.get_state()
+# obs = sensor(s)
+
+# plt.figure()
+# plt.imshow(obs)
+# plt.xticks([])
+# plt.yticks([])
+# plt.show()
 
 #%%
-s = []
-for _ in range(100):
-    env.step(np.random.randint(4))
-    s.append(env.get_state())
-s = np.stack(s)
-#%%
-env.plot()
-s = env.get_state()
-obs = sensor.observe(s)
-
-plt.figure()
-plt.imshow(obs)
-plt.xticks([])
-plt.yticks([])
+ob = env.render()
+plt.imshow(ob)
 plt.show()
+
+#%%
+for a in [0, 3]:
+    env.step(a)
+    ob = env.render()
+    plt.imshow(ob)

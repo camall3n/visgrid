@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 import seeding
 from tqdm import tqdm
 
-from visgrid.envs import GridWorld
+from visgrid.envs import GridworldEnv
 from visgrid.sensors import *
 
-env = GridWorld(rows=6, cols=6)
+env = GridworldEnv(rows=6, cols=6)
 env.reset_agent()
 
 sensor = SensorChain([
@@ -49,7 +49,7 @@ for a in tqdm(actions):
     for t in range(5):
         ax.clear()
         jointax[0].clear()
-        x = sensor.observe(env.get_state())
+        x = sensor(env.get_state())
         ax.imshow(x)
         jointax[0].imshow(x)
         ax.set_xticks([])
@@ -80,7 +80,7 @@ imageio.imwrite('s_frame0.png', s_frames[0])
 # env.plot()
 for i in range(10):
     s = env.get_state()
-    obs = sensor.observe(s)
+    obs = sensor(s)
 
     plt.figure()
     plt.imshow(obs)

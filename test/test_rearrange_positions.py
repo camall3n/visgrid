@@ -10,7 +10,7 @@ import time
 import torch
 from tqdm import tqdm
 
-from visgrid.envs import GridWorld
+from visgrid.envs import GridworldEnv
 from visgrid.utils import get_parser
 from visgrid.sensors import *
 
@@ -29,7 +29,7 @@ args = parser.parse_args()
 seeding.seed(args.seed, np, torch)
 
 #%% ------------------ Define MDP ------------------
-env = GridWorld(rows=args.rows, cols=args.cols)
+env = GridworldEnv(rows=args.rows, cols=args.cols)
 cmap = None
 
 sensor = SensorChain([
@@ -52,8 +52,8 @@ fig.show()
 
 for t in range(n_samples):
     s = env.get_state()
-    x = sensor.observe([s])[0]
-    o = np.concatenate((image_sensor.observe(s), image_sensor.observe(x)), axis=1)
+    x = sensor([s])[0]
+    o = np.concatenate((image_sensor(s), image_sensor(x)), axis=1)
     plt.imshow(o)
     fig.canvas.draw()
     fig.canvas.flush_events()
@@ -79,8 +79,8 @@ for t in range(n_samples):
 ds = list(map(np.linalg.norm, s1 - s0))
 
 #%% ------------------ Define sensor ------------------
-x0 = sensor.observe(s0)
-x1 = sensor.observe(s1)
+x0 = sensor(s0)
+x1 = sensor(s1)
 dx = list(map(np.linalg.norm, x1 - x0))
 
 #%% ------------------ Plot ds vs dx ------------------
@@ -92,7 +92,7 @@ dx = list(map(np.linalg.norm, x1 - x0))
 #%%
 
 for s, x in zip(s0[:20], x0):
-    o = np.concatenate((image_sensor.observe(s), image_sensor.observe(x)), axis=1)
+    o = np.concatenate((image_sensor(s), image_sensor(x)), axis=1)
     plt.imshow(o)
     fig.canvas.draw()
     fig.canvas.flush_events()

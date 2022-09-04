@@ -1,13 +1,16 @@
-import random
+import warnings
 
-import numpy as np
+from cv2 import resize, INTER_AREA, INTER_LINEAR
 import matplotlib.pyplot as plt
+import numpy as np
 
-from .components import grid
+from .components.grid import Grid
 from .components.agent import Agent
 from .components.depot import Depot
+from .. import utils
+from ..sensors import Sensor
 
-class GridWorld:
+class GridworldEnv:
     # Offsets:
     LEFT = np.asarray((0, -1))
     RIGHT = np.asarray((0, 1))
@@ -28,12 +31,74 @@ class GridWorld:
         tuple(DOWN): 3,
     }
 
-    def __init__(self, rows, cols):
-        self.grid = grid.Grid(rows, cols)
-        self.agent = Agent()
+    _default_dimensions = {
+        'wall_width': 4,
+        'cell_width': 24,
+        'character_width': 16,
+        'depot_width': 8,
+        'border_widths': (0, 0),
+        'img_shape': (64, 64),
+    }
+
+    def __init__(self,
+                 rows: int,
+                 cols: int,
+                 exploring_starts: bool = True,
+                 terminate_on_goal: bool = True,
+                 fixed_goal: bool = True,
+                 image_observations: bool = True,
+                 sensor: Sensor = None,
+                 dimensions: dict = None):
+        self.grid = Grid(rows, cols)
+        self.exploring_starts = exploring_starts
+        self.fixed_goal = fixed_goal
+        self.terminate_on_goal = terminate_on_goal
+        self.image_observations = image_observations
+        self.sensor = sensor if sensor is not None else Sensor()
+        self.dimensions = dimensions if dimensions is not None else self._default_dimensions
         self.actions = [i for i in range(4)]
-        self.agent.position = np.asarray((0, 0), dtype=int)
-        self.goal = None
+        self._initialize_agent()
+        self._initialize_depots()
+
+    # ------------------------------------------------------------
+    # Initialization
+    # ------------------------------------------------------------
+
+    def _initialize_agent(self):
+        self.agent = Agent(self.grid.get_random_position())
+        self._agent_initial_position = self.agent.position.copy()
+
+    def _initialize_depots(self):
+        self.goal = Depot(self.grid.get_random_position(), color='red')
+        self.depots = {'red': self.goal}
+
+    # ------------------------------------------------------------
+    # Alternate constructors
+    # ------------------------------------------------------------
+
+    @classmethod
+    def from_grid(cls, grid: np.ndarray, dimensions: dict = None):
+        env = cls(grid.rows, grid.cols, dimensions)
+        env.grid = grid
+        return env
+
+    @classmethod
+    def from_file(cls, filename: str, dimensions: dict = None):
+        try:
+            grid = Grid.from_file(filename)
+        except IOError as e:
+            print(f'Grid file not found: {filename}')
+            raise e
+        return cls.from_grid(grid, dimensions)
+
+    @classmethod
+    def from_saved_maze(cls, rows: int, cols: int, seed: int, dimensions: dict = None):
+        maze_file = f'visgrid/envs/saved/mazes_{rows}x{cols}/seed-{seed:03d}/maze-{seed}.txt'
+        return cls.from_file(maze_file, dimensions)
+
+    # ------------------------------------------------------------
+    # Properties
+    # ------------------------------------------------------------
 
     @property
     def rows(self):
@@ -43,35 +108,50 @@ class GridWorld:
     def cols(self):
         return self.grid._cols
 
-    def reset_agent(self):
-        self.agent.position = self.grid.get_random_position()
-        at = lambda x, y: np.all(x.position == y.position)
-        while (self.goal is not None) and at(self.agent, self.goal):
-            self.agent.position = self.grid.get_random_position()
+    # ------------------------------------------------------------
+    # Environment API
+    # ------------------------------------------------------------
 
-    def reset_goal(self):
-        if self.goal is None:
-            self.goal = Depot()
-        self.goal.position = self.grid.get_random_position()
-        self.reset_agent()
+    def _reset(self):
+        if self.exploring_starts:
+            while True:
+                self.agent.position = self.grid.get_random_position()
+                if not (self.terminate_on_goal and self._check_goal()):
+                    break
+        else:
+            self.agent_position = self._agent_initial_position
 
-    def check_goal(self):
-        return np.all(self.agent.position == self.goal.position)
+        if not self.fixed_goal:
+            self.goal.position = self.grid.get_random_position()
+
+    def reset(self):
+        self._reset()
+        ob = self.get_observation(self.get_state())
+        return ob
 
     def step(self, action):
-        assert (action in range(4))
-        direction = self._action_offsets[action]
-        if not self.grid.has_wall(self.agent.position, direction):
-            self.agent.position += direction
-        s = self.get_state()
-        if self.goal:
-            at_goal = self.check_goal(s)
-            r = 0 if at_goal else -1
-            done = True if at_goal else False
+        """
+        Execute action if it can run, then return the corresponding effects
+        """
+        if self.can_run(action):
+            self._step(action)
+
+        state = self.get_state()
+        if self.terminate_on_goal and self._check_goal(state):
+            done = True
         else:
-            r = 0
             done = False
-        return s, r, done
+        reward = 1 if done else 0
+        info = {'state': state}
+        ob = self.get_observation(state)
+        return ob, reward, done, info
+
+    def _step(self, action):
+        """
+        Execute action without checking if it can run
+        """
+        offset = self._action_offsets[action]
+        self.agent.position += offset
 
     def can_run(self, action):
         assert (action in range(4))
@@ -79,185 +159,172 @@ class GridWorld:
         return False if self.grid.has_wall(self.agent.position, direction) else True
 
     def get_state(self):
-        return np.copy(self.agent.position)
+        state = []
+        row, col = self.agent.position
+        state.extend([row, col])
+        if not self.fixed_goal:
+            goal_row, goal_col = self.goal.position
+            state.extend([goal_row, goal_col])
+        return np.asarray(state, dtype=int)
 
-    def plot(self, ax=None, draw_bg_grid=True, linewidth_multiplier=1.0, plot_goal=True):
-        ax = self.grid.plot(ax,
-                            draw_bg_grid=draw_bg_grid,
-                            linewidth_multiplier=linewidth_multiplier)
-        if self.agent:
-            self.agent.plot(ax, linewidth_multiplier=linewidth_multiplier)
-        if self.goal and plot_goal:
-            self.goal.plot(ax, linewidth_multiplier=linewidth_multiplier)
-        return ax
+    def set_state(self, state):
+        row, col, *remaining = state
+        self.agent.position = row, col
+        if remaining:
+            goal_row, goal_col = remaining
+            self.goal.position = goal_row, goal_col
 
-class TestWorld(GridWorld):
-    def __init__(self):
-        super().__init__(rows=3, cols=4)
-        self._grid[1, 4] = 1
-        self._grid[2, 3] = 1
-        self._grid[3, 2] = 1
-        self._grid[5, 4] = 1
-        self._grid[4, 7] = 1
+    def get_observation(self, state):
+        if self.image_observations:
+            state = self.render(state)
+        return self.sensor(state)
 
-        # Should look roughly like this:
-        # _______
-        #|  _|   |
-        #| |    _|
-        #|___|___|
+    def _check_goal(self, state=None):
+        if state is None:
+            state = self.get_state()
+        for depot in self.depots:
+            if np.all(state[:2] == depot.position):
+                return True
+        return False
 
-class RingWorld(GridWorld):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for r in range(self.rows - 2):
-            self._grid[2 * r + 3, 2] = 1
-            self._grid[2 * r + 3, 2 * self.cols - 2] = 1
-        for c in range(self.cols - 2):
-            self._grid[2, 2 * c + 3] = 1
-            self._grid[2 * self.rows - 2, 2 * c + 3] = 1
+    # ------------------------------------------------------------
+    # Rendering
+    # ------------------------------------------------------------
 
-class SnakeWorld(GridWorld):
-    def __init__(self):
-        super().__init__(rows=3, cols=4)
-        self._grid[1, 4] = 1
-        self._grid[2, 3] = 1
-        self._grid[2, 5] = 1
-        self._grid[3, 2] = 1
-        self._grid[3, 6] = 1
-        self._grid[5, 4] = 1
+    def plot(self):
+        ob = self.render()
+        plt.imshow(ob)
 
-        # Should look roughly like this:
-        # _______
-        #|  _|_  |
-        #| |   | |
-        #|___|___|
+    def render(self, state=None) -> np.ndarray:
+        if state is not None:
+            self.set_state(state)
+        return self._render()
 
-class MazeWorld(GridWorld):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        walls = []
-        for row in range(0, self.rows):
-            for col in range(0, self.cols):
-                #add vertical walls
-                self._grid[row * 2 + 2, col * 2 + 1] = 1
-                walls.append((row * 2 + 2, col * 2 + 1))
+    def _render(self) -> np.ndarray:
+        objects = self._render_objects()
+        foreground = sum(objects.values())
+        background = np.ones_like(foreground) * utils.get_rgb('white')
+        fg_indices = np.any(foreground > 0, axis=-1)
+        background[fg_indices, :] = 0
 
-                #add horizontal walls
-                self._grid[row * 2 + 1, col * 2 + 2] = 1
-                walls.append((row * 2 + 1, col * 2 + 2))
+        content = background + foreground
+        frame = self._render_frame(content)
+        image = self._render_composite_image(frame, content)
 
-        random.shuffle(walls)
-
-        cells = []
-        #add each cell as a set_text
-        for row in range(0, self.rows):
-            for col in range(0, self.cols):
-                cells.append({(row * 2 + 1, col * 2 + 1)})
-
-        #Randomized Kruskal's Algorithm
-        for wall in walls:
-            if (wall[0] % 2 == 0):
-
-                def neighbor(set):
-                    for x in set:
-                        if (x[0] == wall[0] + 1 and x[1] == wall[1]):
-                            return True
-                        if (x[0] == wall[0] - 1 and x[1] == wall[1]):
-                            return True
-                    return False
-
-                neighbors = list(filter(neighbor, cells))
-                if (len(neighbors) == 1):
-                    continue
-                cellSet = neighbors[0].union(neighbors[1])
-                cells.remove(neighbors[0])
-                cells.remove(neighbors[1])
-                cells.append(cellSet)
-                self._grid[wall[0], wall[1]] = 0
+        desired_shape = self.dimensions['img_shape']
+        current_shape = image.shape[:2]
+        if current_shape != desired_shape:
+            warnings.warn(f'Resizing image from {current_shape} to desired {desired_shape}',
+                          RuntimeWarning)
+            if np.prod(desired_shape) < np.prod(current_shape):
+                interp_mode = INTER_AREA  # downscale
             else:
+                interp_mode = INTER_LINEAR  # upscale
+            image = resize(image, desired_shape, interpolation=interp_mode)
+            image = np.clip(image, 0, 1)
+        return image
 
-                def neighbor(set):
-                    for x in set:
-                        if (x[0] == wall[0] and x[1] == wall[1] + 1):
-                            return True
-                        if (x[0] == wall[0] and x[1] == wall[1] - 1):
-                            return True
-                    return False
+    def _render_composite_image(self, frame: np.ndarray, content: np.ndarray) -> np.ndarray:
+        """Generate a border to reflect the current in_taxi status"""
+        pad_top_left, pad_bot_right = self.dimensions['border_widths']
+        H, W, *_ = frame.shape
+        frame[pad_top_left:(H - pad_bot_right), pad_top_left:(W - pad_bot_right), :] = content
+        return frame
 
-                neighbors = list(filter(neighbor, cells))
-                if (len(neighbors) == 1):
-                    continue
-                cellSet = neighbors[0].union(neighbors[1])
-                cells.remove(neighbors[0])
-                cells.remove(neighbors[1])
-                cells.append(cellSet)
-                self._grid[wall[0], wall[1]] = 0
+    def _render_frame(self, content) -> np.ndarray:
+        frame = np.ones_like(content) * utils.get_rgb('white')
+        pad_top_left, pad_bot_right = self.dimensions['border_widths']
+        pad_width = ((pad_top_left, pad_bot_right), (pad_top_left, pad_bot_right), (0, 0))
+        frame = np.pad(frame, pad_width=pad_width, mode='edge')
+        return frame
 
-    @classmethod
-    def load_maze(cls, rows, cols, seed):
-        env = GridWorld(rows=rows, cols=cols)
-        maze_file = 'gridworlds/gridworld/mazes/mazes_{rows}x{cols}/seed-{seed:03d}/maze-{seed}.txt'.format(
-            rows=rows, cols=cols, seed=seed)
-        try:
-            env.load(maze_file)
-        except IOError as e:
-            print()
-            print(
-                'Could not find standardized {rows}x{cols} maze file for seed {seed}. Maybe it needs to be generated?'
-                .format(rows=rows, cols=cols, seed=seed))
-            print()
-            raise e
-        return env
+    def _render_objects(self) -> dict:
+        walls = self.grid.render(cell_width=self.dimensions['cell_width'],
+                                 wall_width=self.dimensions['wall_width'])
+        walls = utils.to_rgb(walls, 'dimgray') / 8
 
-class SpiralWorld(GridWorld):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        depot_patches = np.zeros_like(walls)
+        for depot in self.depots.values():
+            patch = self._render_depot_patch(depot.color)
+            self._add_patch(depot_patches, patch, depot.position)
 
-        # Add all walls
-        for row in range(0, self.rows):
-            for col in range(0, self.cols):
-                #add vertical walls
-                self._grid[row * 2 + 2, col * 2 + 1] = 1
+        agent_patches = np.zeros_like(walls)
+        patch = self._render_character_patch()
+        self._add_patch(agent_patches, patch, self.agent.position)
 
-                #add horizontal walls
-                self._grid[row * 2 + 1, col * 2 + 2] = 1
+        objects = {
+            'walls': walls,
+            'agent': agent_patches,
+        }
+        if not self.fixed_goal:
+            objects['depots'] = depot_patches
 
-        # Check dimensions to decide on appropriate spiral direction
-        if self.cols > self.rows:
-            direction = 'cw'
-        else:
-            direction = 'ccw'
+        return objects
 
-        # Remove walls to build spiral
-        for i in range(0, min(self.rows, self.cols)):
-            # Create concentric hooks, and connect them after the first to build spiral
-            if direction == 'ccw':
-                self._grid[(2 * i + 1):-(2 * i + 1), (2 * i + 1)] = 0
-                self._grid[-(2 * i + 2), (2 * i + 1):-(2 * i + 1)] = 0
-                self._grid[(2 * i + 1):-(2 * i + 1), -(2 * i + 2)] = 0
-                self._grid[(2 * i + 1), (2 * i + 3):-(2 * i + 1)] = 0
-                if i > 0:
-                    self._grid[2 * i, 2 * i + 1] = 0
+    def _render_depot_patch(self, color) -> np.ndarray:
+        """Generate a patch representing a depot"""
+        cell_width = self.dimensions['cell_width']
+        depot_width = self.dimensions['depot_width']
+        assert depot_width <= cell_width // 2
+        sw_patch = np.tri(cell_width // 2, k=(depot_width - cell_width // 2))
+        nw_patch = np.flipud(sw_patch)
+        ne_patch = np.fliplr(nw_patch)
+        se_patch = np.fliplr(sw_patch)
 
-            else:
-                self._grid[(2 * i + 1), (2 * i + 1):-(2 * i + 1)] = 0
-                self._grid[(2 * i + 1):-(2 * i + 1), -(2 * i + 2)] = 0
-                self._grid[-(2 * i + 2), (2 * i + 1):-(2 * i + 1)] = 0
-                self._grid[(2 * i + 3):-(2 * i + 1), (2 * i + 1)] = 0
-                if i > 0:
-                    self._grid[2 * i + 1, 2 * i] = 0
+        patch = np.block([[nw_patch, ne_patch], [sw_patch, se_patch]])
 
-class LoopWorld(SpiralWorld):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        # add center row / column for odd widths
+        if cell_width % 2 == 1:
+            patch = np.insert(patch, cell_width // 2, 0, axis=0)
+            patch = np.insert(patch, cell_width // 2, 0, axis=1)
 
-        # Check dimensions to decide on appropriate spiral direction
-        if self.cols > self.rows:
-            direction = 'cw'
-        else:
-            direction = 'ccw'
+        patch[0, :] = 1
+        patch[:, 0] = 1
+        patch[-1, :] = 1
+        patch[:, -1] = 1
 
-        if direction == 'ccw':
-            self._grid[-3, -4] = 0
-        else:
-            self._grid[-4, -3] = 0
+        patch = utils.to_rgb(patch, color)
+        return patch
+
+    def _render_character_patch(self, color='red') -> np.ndarray:
+        """Generate a patch representing a character"""
+        cell_width = self.dimensions['cell_width']
+        agent_width = self.dimensions['character_width']
+        assert agent_width <= cell_width
+        sw_bg = np.tri(cell_width // 2, k=(cell_width // 2 - agent_width // 2 - 2))
+        nw_bg = np.flipud(sw_bg)
+        ne_bg = np.fliplr(nw_bg)
+        se_bg = np.fliplr(sw_bg)
+
+        bg = np.block([[nw_bg, ne_bg], [sw_bg, se_bg]])
+
+        # add center row / column for odd widths
+        if cell_width % 2 == 1:
+            bg = np.insert(bg, cell_width // 2, 0, axis=0)
+            bg = np.insert(bg, cell_width // 2, 0, axis=1)
+
+        # crop edges to a circle and invert
+        excess = (cell_width - agent_width) // 2
+        bg[:excess, :] = 1
+        bg[:, :excess] = 1
+        bg[-excess:, :] = 1
+        bg[:, -excess:] = 1
+        patch = (1 - bg)
+
+        patch = utils.to_rgb(patch, color)
+        return patch
+
+    def _add_patch(self, image: np.ndarray, patch: np.ndarray, position) -> np.ndarray:
+        cell_width = self.dimensions['cell_width']
+        wall_width = self.dimensions['wall_width']
+        row, col = self._cell_start(position, cell_width, wall_width)
+        image[row:row + cell_width, col:col + cell_width, :] = patch
+        return image
+
+    @staticmethod
+    def _cell_start(position, cell_width: int, wall_width: int):
+        """Compute <row, col> indices of top-left pixel of cell at given position"""
+        row, col = position
+        row_start = wall_width + row * (cell_width + wall_width)
+        col_start = wall_width + col * (cell_width + wall_width)
+        return (row_start, col_start)

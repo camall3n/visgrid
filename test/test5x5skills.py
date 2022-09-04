@@ -1,91 +1,78 @@
 # %matplotlib inline
 import random
 from visgrid.envs.taxi import *
-from visgrid.agents.expert.taxi_expert import *
+from visgrid.agents.expert.taxi_expert import TaxiExpert
 
-random.seed(0)
-w = Taxi5x5(n_passengers=3)
-w.plot()
-
-#%%
-run_skill(w, 'yellow')
-w.plot()
+random.seed(6)
+env = TaxiEnv(n_passengers=3, exploring_starts=False, terminate_on_goal=False)
+env.reset()
+expert = TaxiExpert(env)
+env.plot()
 
 #%%
-run_skill(w, 'interact')
-w.plot()
+expert.run_skill('green')
+env.plot()
 
 #%%
-run_skill(w, 'green')
-w.plot()
+expert.run_skill('interact')
+env.plot()
 
 #%%
-run_skill(w, 'interact')
-w.plot()
+expert.run_skill('blue')
+env.plot()
 
 #%%
-run_skill(w, 'red')
-w.plot()
+expert.run_skill('interact')
+env.plot()
 
 #%%
-run_skill(w, 'interact')
-w.plot()
+expert.run_skill('yellow')
+env.plot()
 
 #%%
-run_skill(w, 'yellow')
-w.plot()
+expert.run_skill('interact')
+env.plot()
 
 #%%
-run_skill(w, 'interact')
-w.plot()
+expert.run_skill('green')
+env.plot()
 
 #%%
-run_skill(w, 'blue')
-w.plot()
+expert.run_skill('interact')
+env.plot()
 
 #%%
-run_skill(w, 'interact')
-w.plot()
+expert.run_skill('red')
+env.plot()
 
 #%%
-run_skill(w, 'red')
-w.plot()
+expert.run_skill('interact')
+env.plot()
 
 #%%
-run_skill(w, 'interact')
-w.plot()
+expert.run_skill('yellow')
+env.plot()
 
 #%%
-run_skill(w, 'yellow')
-w.plot()
+expert.run_skill('interact')
+env.plot()
 
 #%%
-run_skill(w, 'interact')
-w.plot()
+expert.run_skill('blue')
+env.plot()
 
 #%%
-run_skill(w, 'blue')
-w.plot()
+expert.run_skill('interact')
+env.plot()
 
 #%%
-run_skill(w, 'interact')
-w.plot()
+expert.run_skill('red')
+env.plot()
 
 #%%
-run_skill(w, 'green')
-w.plot()
+expert.run_skill('interact')
+env.plot()
+
 
 #%%
-run_skill(w, 'interact')
-w.plot()
-
-#%%
-run_skill(w, 'yellow')
-w.plot()
-
-#%%
-run_skill(w, 'interact')
-w.plot()
-
-#%%
-assert w.check_goal(w.get_state())
+assert env._check_goal(env.get_state())
