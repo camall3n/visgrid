@@ -71,19 +71,9 @@ class NoiseSensor(Sensor):
         self.truncation = truncation
 
     def __call__(self, s):
-        if self.truncation is None:
-            distribution = scipy.stats.norm(0, self.sigma)
-        else:
-            tr = self.truncation
-            distribution = get_truncated_normal(0, self.sigma, low=-tr, upp=tr)
-
-        if s.ndim == 0:
-            n = distribution.rvs()
-        elif s.ndim == 1:
-            n = distribution.rvs(size=len(s))
-        else:
-            n = distribution.rvs(size=(s.shape[0], *s.shape[1:]))
-
+        n = np.random.normal(0, self.sigma, s.shape)
+        if self.truncation is not None:
+            n = np.clip(n, -self.truncation, self.truncation)
         x = s + n
         return x
 
