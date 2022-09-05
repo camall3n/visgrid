@@ -32,7 +32,9 @@ class Grid:
         return self._grid.shape
 
     def get_random_position(self):
-        return np.asarray((np.random.randint(0, self._rows), np.random.randint(0, self._cols)))
+        cells = self._grid[:, 1::2][1::2, :]
+        nonzero_indices = np.stack(np.nonzero(1 - cells)).T
+        return random.choice(nonzero_indices)
 
     def has_wall(self, position, offset):
         row, col = position
