@@ -5,6 +5,7 @@ import numpy as np
 import seeding
 
 from visgrid.envs import GridworldEnv
+from visgrid.envs.components.grid import Grid
 from visgrid.sensors import *
 
 #%% Test initial positions
@@ -118,3 +119,48 @@ for _ in range(100):
     reset_goal_positions.append(tuple(state[2:]))
 assert not all([agent_pos == initial_agent_position for agent_pos in reset_agent_positions])
 assert not all([goal_pos == initial_goal_position for goal_pos in reset_goal_positions])
+
+#%% Test loading from saved maze
+env = GridworldEnv.from_saved_maze(6, 6, 2)
+env.reset()
+env.plot()
+
+#%% Test loading from file
+env = GridworldEnv.from_file('visgrid/envs/saved/test_3x4.txt')
+env.reset()
+env.plot()
+
+#%% Test constructing gridworld directly from a grid
+grid = Grid.generate_spiral(6, 6)
+env = GridworldEnv.from_grid(grid, agent_position=(0, 0), goal_position=(2, 3))
+env.reset()
+assert tuple(env.agent.position) == (0, 0)
+assert tuple(env.goal.position) == (2, 3)
+env.plot()
+
+#%% Test saving a grid
+grid = Grid(6, 6)
+grid[1:5,4:9] = 1
+grid[8:,4:9] = 1
+grid.save('visgrid/envs/saved/h_maze_6x6.txt')
+env = GridworldEnv.from_grid(grid, goal_position=(0, 5), agent_position=(5, 0))
+env.reset()
+env.plot()
+
+#%% Test saving a grid
+grid = Grid(6, 6)
+grid[4:9,:9] = 1
+grid.save('visgrid/envs/saved/u_maze_6x6.txt')
+env = GridworldEnv.from_grid(grid, goal_position=(0, 0), agent_position=(5, 0))
+env.reset()
+env.plot()
+
+#%% Test generating ring mazes
+grid = Grid.generate_ring(6, 6, width=2)
+env = GridworldEnv.from_grid(grid)
+invalid_positions = [(2, 2), (2, 3), (3, 2), (3, 3)]
+for _ in range(100):
+    env.reset()
+    assert tuple(env.agent.position) not in invalid_positions
+    assert tuple(env.goal.position) not in invalid_positions
+env.plot()
