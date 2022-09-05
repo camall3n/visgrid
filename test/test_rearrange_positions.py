@@ -58,7 +58,7 @@ for t in range(n_samples):
     fig.canvas.draw()
     fig.canvas.flush_events()
     while True:
-        # a = np.random.choice(env.actions)
+        # a = env.action_space.sample()
         a = {
             'w': 2,
             's': 3,

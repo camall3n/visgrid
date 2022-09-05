@@ -2,6 +2,8 @@ import copy
 import random
 
 import numpy as np
+import gym
+from gym import spaces
 
 from .gridworld import GridworldEnv
 from .components.passenger import Passenger
@@ -39,6 +41,36 @@ class TaxiEnv(GridworldEnv):
                  image_observations: bool = True,
                  sensor: Sensor = None,
                  dimensions: dict = None):
+        """
+        Visual taxi environment
+
+        Original 5x5 taxi environment adapted from:
+            Dietterich, G. Thomas. "Hierarchical Reinforcement Learning
+            with the MAXQ Value Function Decomposition", JAIR, 2000
+
+        Extended 10x10 version adapted from:
+            Diuk, Cohen, & Littman. "An Object-Oriented Representation
+            for Efficient Reinforcement Learning", ICML, 2008
+
+        size: {5, 10}
+        n_passengers: {0..3} for size 5; {0..7} for size 10
+        exploring_starts:
+            True: initial state is sampled from a balanced distribution over the
+                  entire state space.
+            False: initial taxi/passenger positions are at random unique depots
+        terminate_on_goal:
+            True: reaching the goal produces a terminal state and a reward
+            False: the goal has no special significance and the episode simply continues
+        depot_dropoff_only:
+            True: passengers can only be dropped off at (vacant) depots
+            False: passengers can be dropped off anywhere in the grid
+        image_observations:
+            True: Observations are images
+            False: Observations use internal state vector
+        sensor: (deprecated) an operation (or chain of operations) to apply after generating
+            each observation
+        dimensions: dictionary of size information for rendering
+        """
         self.size = size
         self.n_passengers = n_passengers
         self.depot_dropoff_only = depot_dropoff_only
@@ -51,15 +83,32 @@ class TaxiEnv(GridworldEnv):
                          image_observations=image_observations,
                          sensor=sensor,
                          dimensions=dimensions)
-        self.actions.append(4)  # Add interact action
-        self.passenger = None
+
         self.goal = None
         self._initialize_walls()
         self._initialize_passengers()
 
+        self.action_space = spaces.Discrete(5)
+        self._initialize_state_space()
+        self._initialize_obs_space()
+
     # ------------------------------------------------------------
     # Initialization
     # ------------------------------------------------------------
+
+    def _initialize_state_space(self):
+        taxi_state_shape = (self.rows, self.cols)
+        psgr_state_shape = (self.rows, self.cols, 2, len(self.depots))
+        state_shape = taxi_state_shape + (psgr_state_shape * self.n_passengers)
+        self.state_space = spaces.MultiDiscrete(state_shape, dtype=int)
+
+    def _initialize_obs_space(self):
+        if self.image_observations:
+            img_shape = self.dimensions['img_shape'] + (3, )
+            self.observation_space = spaces.Box(0.0, 1.0, img_shape, dtype=np.float32)
+        else:
+            obs_shape = self.state_space.shape
+            self.observation_space = spaces.MultiDiscrete(obs_shape, dtype=int)
 
     def _initialize_depots(self):
         if self.size == 5:
@@ -110,6 +159,7 @@ class TaxiEnv(GridworldEnv):
                 'Valid options: {5, 10}.')
 
     def _initialize_passengers(self):
+        self.passenger = None
         max_passengers = len(self.depots) - 1
         if not (0 <= self.n_passengers <= max_passengers):
             raise ValueError(

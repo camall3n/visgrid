@@ -1,7 +1,10 @@
 import warnings
-from typing import Tuple
+from typing import Tuple, Optional
 
 from cv2 import resize, INTER_AREA, INTER_LINEAR
+import gym
+from gym import spaces
+from gym.core import ObsType, ActType
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -11,12 +14,12 @@ from .components.depot import Depot
 from .. import utils
 from ..sensors import Sensor
 
-class GridworldEnv:
+class GridworldEnv(gym.Env):
     # Offsets:
-    LEFT = np.asarray((0, -1))
-    RIGHT = np.asarray((0, 1))
-    UP = np.asarray((-1, 0))
-    DOWN = np.asarray((1, 0))
+    LEFT = np.array((0, -1))
+    RIGHT = np.array((0, 1))
+    UP = np.array((-1, 0))
+    DOWN = np.array((1, 0))
 
     _action_offsets = {
         0: LEFT,
@@ -54,6 +57,31 @@ class GridworldEnv:
                  image_observations: bool = True,
                  sensor: Sensor = None,
                  dimensions: dict = None):
+        """
+        Visual gridworld environment
+
+        rows, cols: the shape of the gridworld
+        exploring_starts:
+            True: agent starting position is sampled uniformly from all non-goal positions
+            False: agent returns to its initial position on reset
+        terminate_on_goal:
+            True: reaching the goal produces a terminal state and a reward
+            False: the goal has no special significance and the episode simply continues
+        fixed_goal:
+            True: the goal stays the same after each episode
+            False: the goal resets to a randomly chosen location after each episode
+        hidden_goal:
+            True: goal information is included in the observations
+            False: goal information is removed from the observations
+        agent_position: initial position for the agent
+        goal_position: initial position for the goal
+        image_observations:
+            True: Observations are images
+            False: Observations use internal state vector
+        sensor: (deprecated) an operation (or chain of operations) to apply after generating
+            each observation
+        dimensions: dictionary of size information for rendering
+        """
         self.grid = Grid(rows, cols)
         self.exploring_starts = exploring_starts
         self.fixed_goal = fixed_goal
@@ -62,13 +90,27 @@ class GridworldEnv:
         self.image_observations = image_observations
         self.sensor = sensor if sensor is not None else Sensor()
         self.dimensions = dimensions if dimensions is not None else self._default_dimensions
-        self.actions = [i for i in range(4)]
+
         self._initialize_agent(agent_position)
         self._initialize_depots(goal_position)
+
+        self.action_space = spaces.Discrete(4)
+        self.state_space = spaces.MultiDiscrete((rows, cols, rows, cols), dtype=int)
+        self._initialize_obs_space()
 
     # ------------------------------------------------------------
     # Initialization
     # ------------------------------------------------------------
+
+    def _initialize_obs_space(self):
+        if self.image_observations:
+            img_shape = self.dimensions['img_shape'] + (3, )
+            self.observation_space = spaces.Box(0.0, 1.0, img_shape, dtype=np.float32)
+        else:
+            obs_shape = self.state_space.shape
+            if self.hidden_goal:
+                obs_shape = obs_shape[:2]
+            self.observation_space = spaces.MultiDiscrete(obs_shape, dtype=int)
 
     def _initialize_agent(self, position=None):
         if position is None:
@@ -134,16 +176,26 @@ class GridworldEnv:
         else:
             self.agent.position = self._agent_initial_position
 
-    def reset(self):
+    def reset(self, seed: Optional[int] = None) -> Tuple[ObsType, dict]:
+        """
+        Reset the environment. Must be called before calling step().
+
+        returns: observation, info
+        """
+        super().reset(seed=seed)
         self._cached_state = None
         self._cached_render = None
         self._reset()
-        ob = self.get_observation(self.get_state())
-        return ob
+        state = self.get_state()
+        ob = self.get_observation(state)
+        info = self._get_info(state)
+        return ob, info
 
-    def step(self, action):
+    def step(self, action: ActType) -> Tuple[ObsType, float, bool, bool, dict]:
         """
         Execute action if it can run, then return the corresponding effects
+
+        returns: observation, reward, terminated, truncated, info
         """
         self._cached_state = None
         self._cached_render = None
@@ -152,13 +204,13 @@ class GridworldEnv:
 
         state = self.get_state()
         if self.terminate_on_goal and self._check_goal(state):
-            done = True
+            terminated = True
         else:
-            done = False
-        reward = 1 if done else 0
-        info = {'state': state}
+            terminated = False
+        reward = 1 if terminated else 0
         ob = self.get_observation(state)
-        return ob, reward, done, info
+        info = self._get_info(state)
+        return ob, reward, terminated, False, info
 
     def _step(self, action):
         """
@@ -189,10 +241,18 @@ class GridworldEnv:
         if state is None:
             state = self.get_state()
         if self.image_observations:
-            state = self.render(state)
+            state = self._render(state)
         elif self.hidden_goal:
             state = state[:2]
         return self.sensor(state)
+
+    def _get_info(self, state=None):
+        if state is None:
+            state = self.get_state()
+        info = {
+            'state': state,
+        }
+        return info
 
     def _check_goal(self, state=None):
         if state is None:
@@ -213,7 +273,7 @@ class GridworldEnv:
         plt.yticks([])
         plt.show()
 
-    def render(self, state=None) -> np.ndarray:
+    def _render(self, state: Optional[Tuple] = None) -> np.ndarray:
         current_state = self.get_state()
         try:
             if state is not None:
@@ -221,12 +281,12 @@ class GridworldEnv:
             # only render observation once per step
             if (self._cached_state is None) or (state != self._cached_state).any():
                 self._cached_state = state
-                self._cached_render = self._render()
+                self._cached_render = self._do_render()
             return self._cached_render
         finally:
             self.set_state(current_state)
 
-    def _render(self) -> np.ndarray:
+    def _do_render(self) -> np.ndarray:
         objects = self._render_objects()
         foreground = sum(objects.values())
         background = np.ones_like(foreground) * utils.get_rgb('white')

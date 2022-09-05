@@ -17,7 +17,7 @@ env = GridworldEnv(rows=6,
                    agent_position=(5, 3),
                    goal_position=(4, 0),
                    image_observations=False)
-assert env.reset().shape == (4, )
+assert env.reset()[0].shape == (4, )
 initial_agent_position = tuple(env.get_state()[:2])
 assert initial_agent_position == (5, 3)
 initial_goal_position = tuple(env.get_state()[2:])
@@ -39,21 +39,22 @@ env.plot()
 assert env.get_observation().shape == (18, 18)
 
 #%% Test a deterministic action sequence
-obs, rewards, dones, infos = [], [], [], []
+obs, rewards, terminals, truncateds, infos = [], [], [], [], []
 for action in [0, 0, 1, 1, 2, 2, 0, 3, 3, 0]:
     assert env.can_run(action)
-    ob, reward, done, info = env.step(action)
-    assert not done
+    ob, reward, terminal, truncated, info = env.step(action)
+    assert not terminal
     obs.append(ob)
     rewards.append(reward)
-    dones.append(done)
+    terminals.append(terminal)
+    truncateds.append(truncated)
     infos.append(info)
 obs = np.stack(obs)
 rewards = np.stack(rewards)
-dones = np.stack(dones)
+terminals = np.stack(terminals)
 assert obs.shape == (10, 18, 18)
-assert rewards.shape == dones.shape == (10, )
-assert all(rewards == 0) and all(dones == False)
+assert rewards.shape == terminals.shape == (10, )
+assert all(rewards == 0) and all(terminals == False)
 assert tuple(env.get_state()[:2]) != initial_agent_position
 assert tuple(env.get_state()[2:]) == initial_goal_position
 
@@ -66,28 +67,30 @@ env.plot()
 
 #%% Test image observations with visible goal
 env.hidden_goal = False
+for action in [3]:
+    env.step(action)
 visible_goal_image = env.get_observation()
 assert (hidden_goal_image != visible_goal_image).any()
 env.plot()
 
 #%% Test reaching goal when terminate_on_goal is False
 for action in [2, 0]:
-    ob, reward, done, info = env.step(action)
+    ob, reward, terminal, truncated, info = env.step(action)
 env.plot()
 plt.show()
-print(f'r = {reward}, done = {done}, info = {info}')
+print(f'r = {reward}, terminal = {terminal}, truncated = {truncated}, info = {info}')
 assert env._check_goal() == True
-assert reward == 0 and not done
+assert reward == 0 and not terminal
 
 #%% Test noop action reaching goal when terminate_on_goal is True
 env.terminate_on_goal = True
 for action in [0]:
     assert not env.can_run(action)
-    ob, reward, done, info = env.step(action)
+    ob, reward, terminal, truncated, info = env.step(action)
 env.plot()
-print(f'r = {reward}, done = {done}, info = {info}')
+print(f'r = {reward}, terminal = {terminal}, truncated = {truncated}, info = {info}')
 assert env._check_goal() == True
-assert reward == 1 and done
+assert reward == 1 and terminal
 
 #%% Test reset uses initial positions
 env.reset()
