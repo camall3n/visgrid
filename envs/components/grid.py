@@ -69,14 +69,11 @@ class Grid:
         return grid
 
     @classmethod
-    def generate_ring(cls, rows, cols):
+    def generate_ring(cls, rows, cols, width=1):
         grid = cls(rows, cols)
-        for r in range(rows - 2):
-            grid[2 * r + 3, 2] = 1
-            grid[2 * r + 3, 2 * cols - 2] = 1
-        for c in range(cols - 2):
-            grid[2, 2 * c + 3] = 1
-            grid[2 * rows - 2, 2 * c + 3] = 1
+        start = 2 + 2 * (width - 1)
+        end = lambda x: 2 * x - 1 - (2 * (width - 1))
+        grid[start:end(rows), start:end(cols)] = 1
         return grid
 
     @classmethod
