@@ -1,5 +1,5 @@
 import numpy as np
-import scipy.ndimage.filters
+import scipy.ndimage
 import scipy.stats
 import torch
 
@@ -124,10 +124,10 @@ class BlurSensor(Sensor):
         self.truncate = truncate
 
     def __call__(self, s):
-        return scipy.ndimage.filters.gaussian_filter(s,
-                                                     sigma=self.sigma,
-                                                     truncate=self.truncate,
-                                                     mode='nearest')
+        return scipy.ndimage.gaussian_filter(s,
+                                             sigma=self.sigma,
+                                             truncate=self.truncate,
+                                             mode='nearest')
 
 class PairEntangleSensor(Sensor):
     def __init__(self, n_features, index_a=None, index_b=None, amount=1.0):
