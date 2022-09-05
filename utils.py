@@ -36,6 +36,7 @@ def to_rgb(array: np.ndarray, color=None):
         pass
     else:
         array = np.tile(array[:, :, np.newaxis], (1, 1, 3))
+    array = array.astype(float)
     if color is not None:
         array *= get_rgb(color)
     return array
