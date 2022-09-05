@@ -59,12 +59,14 @@ class Grid:
         np.savetxt(filename, self._grid.astype(int), fmt='%1d')
 
     @classmethod
-    def from_file(self, filename):
-        grid = np.loadtxt(filename, dtype=int)
-        r, c = grid.shape
-        self._rows = r // 2
-        self._cols = c // 2
-        self._grid = grid
+    def from_file(cls, filename):
+        array = np.loadtxt(filename, dtype=int)
+        r, c = array.shape
+        rows = r // 2
+        cols = c // 2
+        grid = cls(rows, cols)
+        grid._grid[:, :] = array
+        return grid
 
     @classmethod
     def generate_ring(cls, rows, cols):
