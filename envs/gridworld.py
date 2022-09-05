@@ -63,18 +63,22 @@ class GridworldEnv(gym.Env):
         rows, cols: the shape of the gridworld
         exploring_starts:
             True: agent starting position is sampled uniformly from all non-goal positions
+                   (ignored if goal_position is provided)
             False: agent returns to its initial position on reset
+                   (automatically enabled if goal_position is provided)
         terminate_on_goal:
             True: reaching the goal produces a terminal state and a reward
             False: the goal has no special significance and the episode simply continues
         fixed_goal:
             True: the goal stays the same after each episode
+                   (automatically enabled if goal_position is provided)
             False: the goal resets to a randomly chosen location after each episode
+                   (ignored if goal_position is provided)
         hidden_goal:
             True: goal information is included in the observations
             False: goal information is removed from the observations
-        agent_position: initial position for the agent
-        goal_position: initial position for the goal
+        agent_position: position for the agent (disables exploring_starts)
+        goal_position: position for the goal (disables fixed_goal)
         image_observations:
             True: Observations are images
             False: Observations use internal state vector
@@ -83,8 +87,8 @@ class GridworldEnv(gym.Env):
         dimensions: dictionary of size information for rendering
         """
         self.grid = Grid(rows, cols)
-        self.exploring_starts = exploring_starts
-        self.fixed_goal = fixed_goal
+        self.exploring_starts = exploring_starts if agent_position is None else False
+        self.fixed_goal = fixed_goal if goal_position is None else True
         self.hidden_goal = hidden_goal
         self.terminate_on_goal = terminate_on_goal
         self.image_observations = image_observations
@@ -129,24 +133,24 @@ class GridworldEnv(gym.Env):
     # ------------------------------------------------------------
 
     @classmethod
-    def from_grid(cls, grid: np.ndarray, dimensions: dict = None):
-        env = cls(grid.rows, grid.cols, dimensions)
+    def from_grid(cls, grid: np.ndarray, *args, **kw):
+        env = cls(grid._rows, grid._cols, *args, **kw)
         env.grid = grid
         return env
 
     @classmethod
-    def from_file(cls, filename: str, dimensions: dict = None):
+    def from_file(cls, filename: str, *args, **kw):
         try:
             grid = Grid.from_file(filename)
         except IOError as e:
             print(f'Grid file not found: {filename}')
             raise e
-        return cls.from_grid(grid, dimensions)
+        return cls.from_grid(grid, *args, **kw)
 
     @classmethod
-    def from_saved_maze(cls, rows: int, cols: int, seed: int, dimensions: dict = None):
+    def from_saved_maze(cls, rows: int, cols: int, seed: int, *args, **kw):
         maze_file = f'visgrid/envs/saved/mazes_{rows}x{cols}/seed-{seed:03d}/maze-{seed}.txt'
-        return cls.from_file(maze_file, dimensions)
+        return cls.from_file(maze_file, *args, **kw)
 
     # ------------------------------------------------------------
     # Properties
