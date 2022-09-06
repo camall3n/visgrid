@@ -3,6 +3,10 @@ import gym.spaces
 import numpy as np
 
 class PointEnv(gym.Env):
+    """
+    A simple n-dimensional continuous state space with continuous actions,
+    where the actions define the exact change in state at each time step.
+    """
     def __init__(self, ndim: int = 5) -> None:
         super().__init__()
         self.ndim = ndim
