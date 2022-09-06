@@ -11,7 +11,7 @@ class GridworldExpert:
         self.env = env
         self.saved_routes = {}
 
-    def act(self, observation):
+    def act(self, observation=None):
         agent_position = tuple(self.env.agent.position)
         goal_position = tuple(self.env.goal.position)
         if agent_position == goal_position:

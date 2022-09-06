@@ -7,7 +7,7 @@ class TaxiExpert(GridworldExpert):
         super().__init__(env)
         self.excluded_depots = set()
 
-    def act(self, observation):
+    def act(self, observation=None):
         if self.env.passenger is not None:
             goal_depot = self._goal_depot(self.env.passenger)
             if self._at(self.env.agent, goal_depot):
