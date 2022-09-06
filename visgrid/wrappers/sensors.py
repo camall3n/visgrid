@@ -3,13 +3,15 @@ import numpy as np
 import scipy.ndimage
 import scipy.stats
 
+from .base import BaseObservationWrapper
+
 class Sensor:
     def __call__(self, s):
         return s
 
-class SensorWrapper(gym.ObservationWrapper):
+class SensorWrapper(BaseObservationWrapper):
     def __init__(self, env: gym.Env, sensor: Sensor):
-        super().__init__(env, new_step_api=True)
+        super().__init__(env)
         self.sensor = sensor
 
     def reset(self, **kwargs):
@@ -18,16 +20,6 @@ class SensorWrapper(gym.ObservationWrapper):
 
     def observation(self, obs):
         return self.sensor(obs)
-
-    def get_observation(self):
-        return self.sensor(self.env.get_observation())
-
-class MultiplySensor(Sensor):
-    def __init__(self, scale):
-        self.scale = scale
-
-    def __call__(self, s):
-        return s * self.scale
 
 class AsTypeSensor(Sensor):
     def __init__(self, dtype):
@@ -44,13 +36,6 @@ class ClipSensor(Sensor):
 
     def __call__(self, s):
         return np.clip(s, self.limit_min, self.limit_max)
-
-class GrayscaleSensor(Sensor):
-    def __init__(self, axis=-1) -> None:
-        self.axis = axis
-
-    def __call__(self, s):
-        return np.mean(s, axis=self.axis)
 
 class RearrangeXYPositionsSensor(Sensor):
     """Rearrange discrete x-y positions to break smoothness
@@ -124,11 +109,10 @@ class MoveAxisSensor(Sensor):
     def __call__(self, s):
         return np.moveaxis(s, self.source, self.destination)
 
-class ResampleSensor(Sensor):
-    def __init__(self, scale, order=0):
+class UpscaleSensor(Sensor):
+    def __init__(self, scale):
         assert type(scale) is int
         self.scale = scale
-        self.order = order
 
     def __call__(self, s):
         return np.kron(s, np.ones((self.scale, self.scale)))
@@ -144,11 +128,11 @@ class BlurSensor(Sensor):
                                              truncate=self.truncate,
                                              mode='nearest')
 
-class PairEntangleSensor(Sensor):
+class RotationSensor(Sensor):
     def __init__(self, n_features, index_a=None, index_b=None, amount=1.0):
-        # input:     X     Y     A     Z     S     B     T
-        # output:    X     Y     A'    Z     S     B'    T
-        # where [A',B']^T = R(theta) * [A, B]^T,
+        # input:     x1, x2, ..., a , ..., b , ..., xn
+        # output:    x1, x2, ..., a', ..., b', ..., xn
+        # where [a',b']^T = R(theta) * [a, b]^T,
         #        R is a rotation-by-theta matrix,
         #        and theta = π/4 * amount
         assert n_features > 1, 'n_features must be > 1'
@@ -179,29 +163,6 @@ class PairEntangleSensor(Sensor):
         s_flat[:, self.index_a] = a
         s_flat[:, self.index_b] = b
         return s_flat.reshape(s.shape)
-
-class PermuteAndAverageSensor(Sensor):
-    def __init__(self, n_features, n_permutations=1):
-        self.n_features = n_features
-        self.permutations = [np.arange(n_features)] + [
-            np.random.permutation(n_features) for _ in range(n_permutations)
-        ]
-
-    def __call__(self, s):
-        s_flat = s.reshape(-1, self.n_features)
-        output = np.zeros_like(s_flat)
-        for p in self.permutations:
-            sp_flat = np.take(s_flat, p, axis=1)
-            sp = sp_flat.reshape(s.shape)
-            output += sp
-        return output / len(self.permutations)
-
-class UnsqueezeSensor:
-    def __init__(self, dim=-1):
-        self.dim = dim
-
-    def __call__(self, s):
-        return s.unsqueeze(dim=self.dim)
 
 class SensorChain(Sensor):
     def __init__(self, sensors):
