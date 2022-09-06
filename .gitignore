@@ -13,3 +13,5 @@ results/
 archive/
 *.vagrant/
 *.sif
+*.egg-info
+
