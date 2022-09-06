@@ -40,6 +40,7 @@ class GridworldEnv(gym.Env):
     def __init__(self,
                  rows: int,
                  cols: int,
+                 grid: Grid = None,
                  exploring_starts: bool = True,
                  terminate_on_goal: bool = True,
                  fixed_goal: bool = True,
@@ -78,7 +79,8 @@ class GridworldEnv(gym.Env):
             each observation
         dimensions: dictionary of size information for rendering
         """
-        self.grid = Grid(rows, cols)
+        self.grid = Grid(rows, cols) if grid is None else grid
+        assert rows == self.grid._rows and cols == self.grid._cols
         self.exploring_starts = exploring_starts if agent_position is None else False
         self.fixed_goal = fixed_goal if goal_position is None else True
         self.hidden_goal = hidden_goal
@@ -126,8 +128,7 @@ class GridworldEnv(gym.Env):
 
     @classmethod
     def from_grid(cls, grid: np.ndarray, *args, **kw):
-        env = cls(grid._rows, grid._cols, *args, **kw)
-        env.grid = grid
+        env = cls(grid._rows, grid._cols, grid=grid, *args, **kw)
         return env
 
     @classmethod

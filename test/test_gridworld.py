@@ -262,8 +262,19 @@ def test_saving_and_loading_grid(tmp_path):
     env2 = GridworldEnv.from_file(filepath, goal_position=(0, 5), agent_position=(5, 0))
     assert np.all(env1.grid._grid == env2.grid._grid)
 
-def test_generating_ring_mazes():
-    grid = Grid.generate_ring(6, 6, width=2)
+@pytest.fixture
+def ring_grid():
+    return Grid.generate_ring(6, 6, width=2)
+
+def test_generating_valid_states(ring_grid):
+    grid = ring_grid
+    invalid_positions = [(2, 2), (2, 3), (3, 2), (3, 3)]
+    for _ in range(10000):
+        position = tuple(grid.get_random_position())
+        assert position not in invalid_positions
+
+def test_generating_ring_mazes(ring_grid):
+    grid = ring_grid
     env = GridworldEnv.from_grid(grid)
     invalid_positions = [(2, 2), (2, 3), (3, 2), (3, 3)]
     for _ in range(100):
