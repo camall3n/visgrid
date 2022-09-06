@@ -1,3 +1,4 @@
+import gym
 import numpy as np
 import scipy.ndimage
 import scipy.stats
@@ -5,6 +6,21 @@ import scipy.stats
 class Sensor:
     def __call__(self, s):
         return s
+
+class SensorWrapper(gym.ObservationWrapper):
+    def __init__(self, env: gym.Env, sensor: Sensor):
+        super().__init__(env, new_step_api=True)
+        self.sensor = sensor
+
+    def reset(self, **kwargs):
+        obs, info = self.env.reset(**kwargs)
+        return self.observation(obs), info
+
+    def observation(self, obs):
+        return self.sensor(obs)
+
+    def get_observation(self):
+        return self.sensor(self.env.get_observation())
 
 class MultiplySensor(Sensor):
     def __init__(self, scale):

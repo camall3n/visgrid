@@ -5,7 +5,7 @@ from typing import Tuple
 import numpy as np
 
 from visgrid.envs import TaxiEnv
-from visgrid.sensors import *
+from visgrid.wrappers.sensors import *
 
 from visgrid.agents.expert import TaxiExpert
 

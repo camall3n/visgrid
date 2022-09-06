@@ -6,7 +6,7 @@ import numpy as np
 from visgrid.envs import GridworldEnv
 from visgrid.agents.expert import GridworldExpert
 from visgrid.envs.components import Grid
-from visgrid.sensors import *
+from visgrid.wrappers.sensors import *
 
 @pytest.fixture
 def initial_agent_position():
@@ -54,13 +54,14 @@ def sensor_env(initial_agent_position, initial_goal_position):
                        hidden_goal=True,
                        agent_position=initial_agent_position,
                        goal_position=initial_goal_position,
-                       image_observations=False,
-                       sensor=SensorChain([
-                           OffsetSensor(offset=(0.5, 0.5)),
-                           ImageSensor(range=((0, 6), (0, 6)), pixel_density=3),
-                           BlurSensor(sigma=0.6, truncate=1.),
-                           NoiseSensor(sigma=0.01)
-                       ]))
+                       image_observations=False)
+    env = SensorWrapper(env,
+                        sensor=SensorChain([
+                            OffsetSensor(offset=(0.5, 0.5)),
+                            ImageSensor(range=((0, 6), (0, 6)), pixel_density=3),
+                            BlurSensor(sigma=0.6, truncate=1.),
+                            NoiseSensor(sigma=0.01)
+                        ]))
     env.reset()
     return env
 

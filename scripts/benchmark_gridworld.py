@@ -1,7 +1,7 @@
 import numpy as np
 
 from visgrid.envs import GridworldEnv
-from visgrid.sensors import *
+from visgrid.wrappers.sensors import *
 
 from time import time
 

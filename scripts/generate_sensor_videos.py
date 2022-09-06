@@ -5,7 +5,7 @@ import seeding
 from tqdm import tqdm
 
 from visgrid.envs import GridworldEnv
-from visgrid.sensors import *
+from visgrid.wrappers.sensors import *
 
 env = GridworldEnv(rows=6, cols=6)
 env.reset_agent()

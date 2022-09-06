@@ -1,5 +1,5 @@
 from visgrid.envs import TaxiEnv
-from visgrid.sensors import *
+from visgrid.wrappers.sensors import *
 
 from time import time
 
@@ -46,7 +46,7 @@ env = TaxiEnv(
     terminate_on_goal=False,
     depot_dropoff_only=False,
     image_observations=True,
-    dimensions = TaxiEnv.dimensions_5x5_to_64x64,
+    dimensions=TaxiEnv.dimensions_5x5_to_64x64,
 )
 env.reset()
 for _ in range(N):

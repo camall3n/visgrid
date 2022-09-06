@@ -10,7 +10,7 @@ import numpy as np
 
 from .components import Grid, Agent, Depot
 from .. import utils
-from ..sensors import Sensor
+from ..wrappers.sensors import Sensor
 
 class GridworldEnv(gym.Env):
     # Offsets:

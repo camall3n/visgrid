@@ -8,16 +8,14 @@ from tqdm import tqdm
 
 from visgrid.envs import GridworldEnv, TaxiEnv
 from visgrid.agents.expert import TaxiExpert
-from visgrid.sensors import *
+from visgrid.wrappers.sensors import *
 
 env = TaxiEnv(exploring_starts=False,
               terminate_on_goal=True,
               depot_dropoff_only=False,
               image_observations=True,
-              sensor=SensorChain([
-                  NoiseSensor(sigma=0.05),
-                  ClipSensor(0.0, 1.0)
-              ]))
+              sensor=SensorChain([NoiseSensor(sigma=0.05),
+                                  ClipSensor(0.0, 1.0)]))
 env.reset()
 env.agent.position = (0, 4)
 env.passengers[0].position = (0, 0)
@@ -49,10 +47,8 @@ env = TaxiEnv(size=10,
               terminate_on_goal=True,
               depot_dropoff_only=False,
               image_observations=True,
-              sensor=SensorChain([
-                  NoiseSensor(sigma=0.05),
-                  ClipSensor(0.0, 1.0)
-              ]))
+              sensor=SensorChain([NoiseSensor(sigma=0.05),
+                                  ClipSensor(0.0, 1.0)]))
 ob, _ = env.reset()
 expert = TaxiExpert(env)
 images.append(ob)

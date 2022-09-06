@@ -3,13 +3,12 @@ import random
 from typing import Tuple, Union
 
 import numpy as np
-import gym
 from gym import spaces
 
 from .gridworld import GridworldEnv
 from .components import Passenger, Depot
 from .. import utils
-from ..sensors import Sensor
+from ..wrappers.sensors import Sensor
 
 class TaxiEnv(GridworldEnv):
     INTERACT = 4

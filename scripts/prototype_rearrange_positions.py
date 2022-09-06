@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 from visgrid.envs import GridworldEnv
 from visgrid.utils import get_parser
-from visgrid.sensors import *
+from visgrid.wrappers.sensors import *
 
 parser = get_parser()
 if 'ipykernel' in sys.argv[0]:
