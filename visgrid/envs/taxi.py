@@ -1,5 +1,4 @@
 import copy
-import random
 from typing import Tuple, Union
 
 import numpy as np
@@ -191,7 +190,7 @@ class TaxiEnv(GridworldEnv):
     def _reset_classic_start(self):
         # Place passengers randomly at unique depots
         starting_depots = copy.deepcopy(self.depot_names)
-        random.shuffle(starting_depots)
+        self.np_random.shuffle(starting_depots)
         for i, p in enumerate(self.passengers):
             p.position = self.depots[starting_depots[i]].position
             p.in_taxi = False
@@ -203,7 +202,7 @@ class TaxiEnv(GridworldEnv):
         goal_depots = copy.deepcopy(self.depot_names)
         N = self.n_passengers
         while True:
-            random.shuffle(goal_depots)
+            self.np_random.shuffle(goal_depots)
             # Shuffle goal depots until no passenger is at their corresponding goal depot
             start_and_goal_depots = zip(starting_depots[:N], goal_depots[:N])
             if not any([start == goal for start, goal in start_and_goal_depots]):
@@ -216,26 +215,26 @@ class TaxiEnv(GridworldEnv):
     def _reset_exploring_start(self):
         while True:
             # Fully randomize agent position
-            self.agent.position = self.grid.get_random_position()
+            self.agent.position = self.random_grid_position()
             self.passenger = None
 
             # Fully randomize passenger locations (without overlap)
             passenger_locs = np.stack(
-                [self.grid.get_random_position() for _ in range(self.n_passengers)], axis=0)
+                [self.random_grid_position() for _ in range(self.n_passengers)], axis=0)
             while len(np.unique(passenger_locs, axis=0)) < len(passenger_locs):
                 passenger_locs = np.stack(
-                    [self.grid.get_random_position() for _ in range(self.n_passengers)], axis=0)
+                    [self.random_grid_position() for _ in range(self.n_passengers)], axis=0)
             for i, p in enumerate(self.passengers):
                 p.position = passenger_locs[i]
 
             # Randomly decide whether to move the taxi to a passenger
-            if random.random() > 0.5:
+            if self.np_random.random() > 0.5:
                 # If so, randomly choose which passenger
-                p = random.choice(self.passengers)
+                p = self.np_random.choice(self.passengers)
                 self.agent.position = p.position
 
                 # Randomly decide if that passenger should be *in* the taxi
-                if random.random() > 0.5:
+                if self.np_random.random() > 0.5:
                     p.in_taxi = True
                     self.passenger = p
 

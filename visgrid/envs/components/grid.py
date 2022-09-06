@@ -1,7 +1,6 @@
 import random
 
 import numpy as np
-import matplotlib.pyplot as plt
 
 class Grid:
     def __init__(self, rows, cols):
@@ -31,10 +30,12 @@ class Grid:
     def shape(self):
         return self._grid.shape
 
-    def get_random_position(self):
+    def get_random_position(self, rng=None):
+        if rng is None:
+            rng = np.random.default_rng()
         cells = self._grid[:, 1::2][1::2, :]
         nonzero_indices = np.stack(np.nonzero(1 - cells)).T
-        return random.choice(nonzero_indices)
+        return rng.choice(nonzero_indices)
 
     def has_wall(self, position, offset):
         row, col = position

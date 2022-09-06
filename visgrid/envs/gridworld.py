@@ -112,13 +112,13 @@ class GridworldEnv(gym.Env):
 
     def _initialize_agent(self, position=None):
         if position is None:
-            position = self.grid.get_random_position()
+            position = self.random_grid_position()
         self.agent = Agent(position)
         self._agent_initial_position = self.agent.position.copy()
 
     def _initialize_depots(self, position=None):
         if position is None:
-            position = self.grid.get_random_position()
+            position = self.random_grid_position()
         self.goal = Depot(position, color='red')
         self.depots = {'red': self.goal}
 
@@ -158,16 +158,23 @@ class GridworldEnv(gym.Env):
         return self.grid._cols
 
     # ------------------------------------------------------------
+    # Helpers
+    # ------------------------------------------------------------
+
+    def random_grid_position(self):
+        return self.grid.get_random_position(self.np_random)
+
+    # ------------------------------------------------------------
     # Environment API
     # ------------------------------------------------------------
 
     def _reset(self):
         if not self.fixed_goal:
-            self.goal.position = self.grid.get_random_position()
+            self.goal.position = self.random_grid_position()
 
         if self.exploring_starts:
             while True:
-                self.agent.position = self.grid.get_random_position()
+                self.agent.position = self.random_grid_position()
                 if not (self.terminate_on_goal and self._check_goal()):
                     break
         else:
