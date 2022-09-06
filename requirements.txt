@@ -1,0 +1,9 @@
+gym
+imageio
+matplotlib
+numpy
+opencv-python
+pytest
+scipy
+tqdm
+yapf
