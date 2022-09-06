@@ -62,7 +62,7 @@ plt.show()
 #%% Test reaching passenger using expert agent
 expert = TaxiExpert(env)
 while not expert._at(env.agent, env.passengers[0]):
-    action = expert.act()
+    action = expert.act(ob)
     ob, reward, terminal, truncated, info = env.step(action)
     state = info['state']
     print(state)
@@ -86,7 +86,7 @@ assert not terminal
 #%% Test bringing passenger to desired depot using expert
 goal_depot = env.depots[env.passenger.color]
 while not expert._at(env.passenger, goal_depot):
-    action = expert.act()
+    action = expert.act(ob)
     ob, reward, terminal, truncated, info = env.step(action)
     state = info['state']
     print(state)
@@ -143,7 +143,7 @@ assert not all([at_depot(agent_pos) for agent_pos in reset_agent_positions])
 terminal = False
 n_steps = 0
 while n_steps < 1000:
-    action = expert.act()
+    action = expert.act(ob)
     ob, reward, terminal, truncated, info = env.step(action)
     n_steps += 1
     print(info['state'])
@@ -167,7 +167,7 @@ env.plot()
 plt.show()
 n_steps = 0
 while n_steps < 1000:
-    action = expert.act()
+    action = expert.act(ob)
     ob, reward, terminal, truncated, info = env.step(action)
     n_steps += 1
     if terminal:
@@ -188,7 +188,7 @@ expert = TaxiExpert(env)
 env.plot()
 n_steps = 0
 while n_steps < 1000:
-    action = expert.act()
+    action = expert.act(ob)
     if not env.can_run(action):
         env.plot()
         plt.show()

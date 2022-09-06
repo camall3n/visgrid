@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from visgrid.envs import GridworldEnv
+from visgrid.agents.expert.gridworld_expert import GridworldExpert
 from visgrid.envs.components.grid import Grid
 from visgrid.sensors import *
 
@@ -118,9 +119,25 @@ assert not all([agent_pos == initial_agent_position for agent_pos in reset_agent
 assert not all([goal_pos == initial_goal_position for goal_pos in reset_goal_positions])
 
 #%% Test loading from saved maze
-env = GridworldEnv.from_saved_maze(6, 6, 2)
-env.reset()
+env = GridworldEnv.from_saved_maze(6, 6, 7, agent_position=(0, 0), goal_position=(5, 5))
+expert = GridworldExpert(env)
+ob, info = env.reset()
 env.plot()
+n_steps = 0
+while n_steps < 50:
+    action = expert.act(ob)
+    if not env.can_run(action):
+        env.plot()
+        plt.show()
+    ob, reward, terminal, truncated, info = env.step(action)
+    n_steps += 1
+    if terminal:
+        break
+env.plot()
+plt.show()
+assert terminal == True
+assert reward == 1
+
 
 #%% Test loading from file
 env = GridworldEnv.from_file('visgrid/envs/saved/test_3x4.txt')
@@ -130,10 +147,25 @@ env.plot()
 #%% Test constructing gridworld directly from a grid
 grid = Grid.generate_spiral(6, 6)
 env = GridworldEnv.from_grid(grid, agent_position=(0, 0), goal_position=(2, 3))
-env.reset()
+expert = GridworldExpert(env)
+ob, info = env.reset()
+env.plot()
 assert tuple(env.agent.position) == (0, 0)
 assert tuple(env.goal.position) == (2, 3)
+n_steps = 0
+while n_steps < 50:
+    action = expert.act(ob)
+    if not env.can_run(action):
+        env.plot()
+        plt.show()
+    ob, reward, terminal, truncated, info = env.step(action)
+    n_steps += 1
+    if terminal:
+        break
 env.plot()
+plt.show()
+assert terminal == True
+assert reward == 1
 
 #%% Test saving a grid
 grid = Grid(6, 6)

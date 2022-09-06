@@ -1,4 +1,5 @@
 import numpy as np
+
 from .gridworld_expert import GridworldExpert
 
 class TaxiExpert(GridworldExpert):
@@ -6,7 +7,7 @@ class TaxiExpert(GridworldExpert):
         super().__init__(env)
         self.excluded_depots = set()
 
-    def act(self):
+    def act(self, observation):
         if self.env.passenger is not None:
             goal_depot = self._goal_depot(self.env.passenger)
             if self._at(self.env.agent, goal_depot):
@@ -41,10 +42,6 @@ class TaxiExpert(GridworldExpert):
                 # don't just want to return here in one step
                 self.excluded_depots.add(other_depot.color)
 
-    def _next_step_towards(self, position):
-        _, action, _ = self.GoToGridPosition(start=self.env.agent.position, target=position)[0]
-        return action
-
     def _at(self, a: np.ndarray, b: np.ndarray):
         return (a.position == b.position).all()
 
@@ -70,7 +67,7 @@ class TaxiExpert(GridworldExpert):
                 continue
             if d.color in self.excluded_depots:
                 continue
-            distance = self.GetDistance(self.env.agent.position, d.position)
+            distance = self._get_distance(self.env.agent.position, d.position)
             if distance < nearest_distance:
                 nearest_distance = distance
                 nearest_depot = d
@@ -90,7 +87,7 @@ class TaxiExpert(GridworldExpert):
                 continue
             if with_open_goal_depot and not self._depot_is_open(psgr_goal_depot):
                 continue
-            distance = self.GetDistance(self.env.agent.position, p.position)
+            distance = self._get_distance(self.env.agent.position, p.position)
             if distance < nearest_distance:
                 nearest_distance = distance
                 nearest_fare = p

@@ -1,39 +1,69 @@
 from collections import defaultdict
+from typing import Tuple
+import warnings
+
 import numpy as np
+
 from ...utils import manhattan_dist
 
 class GridworldExpert:
     def __init__(self, env):
         self.env = env
-        self.saved_directions = {}
+        self.saved_routes = {}
 
-    def GetDistance(self, start, target):
-        _, distance = self.GoToGridPosition(start, target)
-        return distance
+    def act(self, observation):
+        agent_position = tuple(self.env.agent.position)
+        goal_position = tuple(self.env.goal.position)
+        if agent_position == goal_position:
+            # nothing to do!
+            return self.env.action_space.sample()
+        else:
+            return self._next_step_towards(goal_position)
 
-    def GoToGridPosition(self, start, target):
+    def _next_step_towards(self, position):
+        start = tuple(self.env.agent.position)
+        target = tuple(position)
+        self._update_routes(start, target)
+        direction, _ = self.saved_routes.get((start, target), (None, None))
+        if direction is None:
+            warnings.warn(
+                f'Could not find path from {start} to {target}; taking a random action...',
+                RuntimeWarning)
+            action = self.env.action_space.sample()
+        else:
+            action = self.env._action_ids[direction]
+        return action
+
+    def _get_distance(self, start, target):
         start = tuple(start)
         target = tuple(target)
+        self._update_routes(start, target)
+        direction, distance = self.saved_routes.get((start, target), (None, None))
+        return distance
+
+    def _update_routes(self, start: Tuple[int], target: Tuple[int]):
+        """
+        Update saved routes from start to target
+        """
         # Cache results to save on repeated calls
-        direction, distance = self.saved_directions.get((start, target), (None, None))
+        direction, distance = self.saved_routes.get((start, target), (None, None))
         action = self.env._action_ids[direction] if direction else None
-        if (start, target) not in self.saved_directions or (action is not None
-                                                            and not self.env.can_run(action)):
-            path = self._GridAStarPath(start, target)
+        if (start, target) not in self.saved_routes or (action is not None
+                                                        and not self.env.can_run(action)):
+            path = self._find_astar_path(start, target)
             if path is not None:
                 if path:
                     for i, (next_, current) in enumerate(reversed(list(zip(path[:-1], path[1:])))):
                         direction = tuple(np.asarray(next_) - current)
-                        self.saved_directions[(current, target)] = direction, len(path) - 1 - i
+                        distance = len(path) - 1 - i
+                        self.saved_routes[(current, target)] = direction, distance
                 else:
-                    self.saved_directions[(start, target)] = None, 0
-        direction, distance = self.saved_directions.get((start, target), (None, None))
-        action = self.env._action_ids[direction] if direction else None
-        can_run = True if (action is not None and self.env.can_run(action)) else False
-        terminate = True if (start == target) else False
-        return (can_run, action, terminate), distance
+                    self.saved_routes[(start, target)] = None, 0
 
-    def _GridAStarPath(self, start, target):
+    def _find_astar_path(self, start, target):
+        """
+        Run A* search to find a path from start to target
+        """
         if all(np.asarray(start) == target):
             return []
         # Use A* to search for a path in gridworld from start to target
