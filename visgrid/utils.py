@@ -16,17 +16,22 @@ def get_parser():
     """
     return argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-def get_good_color(color):
-    colorname = color
-    colorname = 'gold' if colorname == 'yellow' else colorname
-    colorname = 'c' if colorname == 'cyan' else colorname
-    colorname = 'm' if colorname == 'magenta' else colorname
-    colorname = 'silver' if colorname in ['gray', 'grey'] else colorname
-    colorname = 'xkcd:almost black' if colorname == 'almost black' else colorname
+def standardize_colorname(colorname: str):
+    standard_colors = {
+        'yellow': 'gold',
+        'cyan': 'c',
+        'magenta': 'm',
+        'orange': 'xkcd:orange',
+        'gray': 'silver',
+        'grey': 'silver',
+        'almost black': 'xkcd:almost black',
+    }
+    if colorname in standard_colors:
+        colorname = standard_colors[colorname]
     return colorname
 
 def get_rgb(colorname: str):
-    good_color = get_good_color(colorname)
+    good_color = standardize_colorname(colorname)
     color_tuple = colors.hex2color(colors.get_named_colors_mapping()[good_color])
     return np.asarray(color_tuple)
 
