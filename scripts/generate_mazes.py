@@ -6,7 +6,7 @@ import numpy as np
 import seeding
 from tqdm import tqdm
 
-from visgrid.envs.components.grid import Grid
+from visgrid.envs.components import Grid
 from visgrid.envs.gridworld import GridworldEnv
 
 rows = 6

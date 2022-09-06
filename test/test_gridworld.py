@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from visgrid.envs import GridworldEnv
-from visgrid.agents.expert.gridworld_expert import GridworldExpert
-from visgrid.envs.components.grid import Grid
+from visgrid.agents.expert import GridworldExpert
+from visgrid.envs.components import Grid
 from visgrid.sensors import *
 
 #%% Test initial positions
@@ -137,7 +137,6 @@ env.plot()
 plt.show()
 assert terminal == True
 assert reward == 1
-
 
 #%% Test loading from file
 env = GridworldEnv.from_file('visgrid/envs/saved/test_3x4.txt')

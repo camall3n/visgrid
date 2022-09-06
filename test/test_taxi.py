@@ -6,7 +6,7 @@ import numpy as np
 from visgrid.envs import TaxiEnv
 from visgrid.sensors import *
 
-from visgrid.agents.expert.taxi_expert import TaxiExpert
+from visgrid.agents.expert import TaxiExpert
 
 #%% Test shapes
 env = TaxiEnv(size=5,

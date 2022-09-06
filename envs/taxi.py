@@ -7,8 +7,7 @@ import gym
 from gym import spaces
 
 from .gridworld import GridworldEnv
-from .components.passenger import Passenger
-from .components.depot import Depot
+from .components import Passenger, Depot
 from .. import utils
 from ..sensors import Sensor
 

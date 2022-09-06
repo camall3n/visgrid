@@ -8,9 +8,7 @@ from gym.core import ObsType, ActType
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .components.grid import Grid
-from .components.agent import Agent
-from .components.depot import Depot
+from .components import Grid, Agent, Depot
 from .. import utils
 from ..sensors import Sensor
 
