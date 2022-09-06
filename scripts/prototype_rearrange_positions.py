@@ -7,7 +7,6 @@ import os
 import seeding
 import sys
 import time
-import torch
 from tqdm import tqdm
 
 from visgrid.envs import GridworldEnv
@@ -26,7 +25,7 @@ parser.add_argument('-s', '--seed', type=int, default=0, help='Random seed')
 # yapf: enable
 args = parser.parse_args()
 
-seeding.seed(args.seed, np, torch)
+seeding.seed(args.seed, np)
 
 #%% ------------------ Define MDP ------------------
 env = GridworldEnv(rows=args.rows, cols=args.cols)

@@ -1,20 +1,12 @@
 import setuptools
 
 packages = [
-    'gmpy',
-    'graphviz',
     'gym',
     'imageio',
-    'imageio-ffmpeg',
     'matplotlib',
     'numpy',
-    'pandas',
-    'Pillow',
     'pytest',
-    'scikit-learn',
     'scipy',
-    'seaborn',
-    'torch',
     'tqdm',
     'yapf',
 ]

@@ -1,7 +1,6 @@
 import numpy as np
 import scipy.ndimage
 import scipy.stats
-import torch
 
 class Sensor:
     def __call__(self, s):
@@ -180,13 +179,6 @@ class PermuteAndAverageSensor(Sensor):
             sp = sp_flat.reshape(s.shape)
             output += sp
         return output / len(self.permutations)
-
-class TorchSensor(Sensor):
-    def __init__(self, dtype=torch.float32):
-        self.dtype = dtype
-
-    def __call__(self, s):
-        return torch.as_tensor(s, dtype=self.dtype)
 
 class UnsqueezeSensor:
     def __init__(self, dim=-1):
