@@ -7,11 +7,18 @@ class GridworldExpert:
         self.env = env
         self.saved_directions = {}
 
+    def GetDistance(self, start, target):
+        _, distance = self.GoToGridPosition(start, target)
+        return distance
+
     def GoToGridPosition(self, start, target):
         start = tuple(start)
         target = tuple(target)
         # Cache results to save on repeated calls
-        if (start, target) not in self.saved_directions:
+        direction, distance = self.saved_directions.get((start, target), (None, None))
+        action = self.env._action_ids[direction] if direction else None
+        if (start, target) not in self.saved_directions or (action is not None
+                                                            and not self.env.can_run(action)):
             path = self._GridAStarPath(start, target)
             if path is not None:
                 if path:
@@ -67,8 +74,14 @@ class GridworldExpert:
 
     def _get_neighbors(self, pos):
         neighbors = []
-        for _, direction in self.env._action_offsets.items():
-            if not self.env.grid.has_wall(pos, direction):
+        for action, direction in self.env._action_offsets.items():
+            if pos == tuple(self.env.agent.position):
+                # if we're *at* this position, check with the env directly
+                can_run = self.env.can_run(action)
+            else:
+                # otherwise, just check based on wall information
+                can_run = not self.env.grid.has_wall(pos, direction)
+            if can_run:
                 neighbor = tuple(np.asarray(pos) + direction)
                 neighbors.append(neighbor)
         return neighbors

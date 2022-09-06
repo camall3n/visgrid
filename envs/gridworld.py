@@ -16,24 +16,18 @@ from ..sensors import Sensor
 
 class GridworldEnv(gym.Env):
     # Offsets:
-    LEFT = np.array((0, -1))
-    RIGHT = np.array((0, 1))
-    UP = np.array((-1, 0))
-    DOWN = np.array((1, 0))
-
-    _action_offsets = {
-        0: LEFT,
-        1: RIGHT,
-        2: UP,
-        3: DOWN,
-    }
+    LEFT = 0
+    RIGHT = 1
+    UP = 2
+    DOWN = 3
 
     _action_ids = {
-        tuple(LEFT): 0,
-        tuple(RIGHT): 1,
-        tuple(UP): 2,
-        tuple(DOWN): 3,
+        (0, -1): LEFT,
+        (0, 1): RIGHT,
+        (-1, 0): UP,
+        (1, 0): DOWN,
     }
+    _action_offsets = {action_id: np.array(offset) for offset, action_id in _action_ids.items()}
 
     dimensions_6x6_to_64x64 = {
         'wall_width': 1,
@@ -301,7 +295,10 @@ class GridworldEnv(gym.Env):
         frame = self._render_frame(content)
         image = self._render_composite_image(frame, content)
 
-        desired_shape = self.dimensions['img_shape']
+        image = self._resize_if_necessary(image, self.dimensions['img_shape'])
+        return image
+
+    def _resize_if_necessary(self, image, desired_shape):
         current_shape = image.shape[:2]
         if current_shape != desired_shape:
             warnings.warn(f'Resizing image from {current_shape} to desired {desired_shape}',

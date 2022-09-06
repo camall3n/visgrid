@@ -1,5 +1,6 @@
 import copy
 import random
+from typing import Tuple, Union
 
 import numpy as np
 import gym
@@ -12,7 +13,9 @@ from .. import utils
 from ..sensors import Sensor
 
 class TaxiEnv(GridworldEnv):
-    dimensions_64x64 = {
+    INTERACT = 4
+
+    dimensions_5x5_to_64x64 = {
         'wall_width': 1,
         'cell_width': 11,
         'character_width': 7,
@@ -21,7 +24,7 @@ class TaxiEnv(GridworldEnv):
         'dash_widths': (4, 4),
         'img_shape': (64, 64),
     }
-    dimensions_84x84 = {
+    dimensions_5x5_to_84x84 = {
         'wall_width': 2,
         'cell_width': 13,
         'character_width': 9,
@@ -30,7 +33,11 @@ class TaxiEnv(GridworldEnv):
         'dash_widths': (6, 6),
         'img_shape': (84, 84),
     }
-    _default_dimensions = dimensions_84x84
+    dimensions_10x10_to_128x128 = copy.copy(dimensions_5x5_to_64x64)
+    dimensions_10x10_to_128x128.update({
+        'border_widths': (4, 3),
+        'img_shape': (128, 128),
+    })
 
     def __init__(self,
                  size: int = 5,
@@ -71,9 +78,15 @@ class TaxiEnv(GridworldEnv):
             each observation
         dimensions: dictionary of size information for rendering
         """
+        if size not in [5, 10]:
+            raise NotImplementedError('size must be in {5, 10}')
         self.size = size
         self.n_passengers = n_passengers
         self.depot_dropoff_only = depot_dropoff_only
+        if size == 5:
+            self._default_dimensions = self.dimensions_5x5_to_84x84
+        elif size == 10:
+            self._default_dimensions = self.dimensions_10x10_to_128x128
         super().__init__(rows=size,
                          cols=size,
                          exploring_starts=exploring_starts,
@@ -110,7 +123,7 @@ class TaxiEnv(GridworldEnv):
             obs_shape = self.state_space.shape
             self.observation_space = spaces.MultiDiscrete(obs_shape, dtype=int)
 
-    def _initialize_depots(self):
+    def _initialize_depots(self, _):
         if self.size == 5:
             self.depot_locs = {# yapf: disable
                 'red':    (0, 0),
@@ -302,7 +315,7 @@ class TaxiEnv(GridworldEnv):
             state.extend([row, col, p.in_taxi, goal_depot_id])
         return np.asarray(state, dtype=int)
 
-    def set_state(self, state: np.ndarray):
+    def set_state(self, state: Union[Tuple, np.ndarray]):
         row, col, *remaining = state
         self.agent.position = row, col
         self.passenger = None
@@ -312,6 +325,8 @@ class TaxiEnv(GridworldEnv):
             color = self.depot_names[goal_depot_id]
             p = Passenger((row, col), color)
             p.in_taxi = in_taxi
+            if in_taxi:
+                self.passenger = p
             self.passengers.append(p)
 
     def get_goal_state(self) -> np.ndarray:
@@ -325,7 +340,9 @@ class TaxiEnv(GridworldEnv):
             state.extend([goal_row, goal_col, in_taxi, goal_depot_id])
         return np.asarray(state, dtype=int)
 
-    def _check_goal(self, state):
+    def _check_goal(self, state=None):
+        if state is None:
+            state = self.get_state()
         goal = self.get_goal_state()
         if np.all(state[2:] == goal):  # ignore taxi, check passenger positions
             return True

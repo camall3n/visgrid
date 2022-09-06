@@ -1,8 +1,5 @@
-import random
-
 import matplotlib.pyplot as plt
 import numpy as np
-import seeding
 
 from visgrid.envs import GridworldEnv
 from visgrid.envs.components.grid import Grid
@@ -140,8 +137,8 @@ env.plot()
 
 #%% Test saving a grid
 grid = Grid(6, 6)
-grid[1:5,4:9] = 1
-grid[8:,4:9] = 1
+grid[1:5, 4:9] = 1
+grid[8:, 4:9] = 1
 grid.save('visgrid/envs/saved/h_maze_6x6.txt')
 env = GridworldEnv.from_grid(grid, goal_position=(0, 5), agent_position=(5, 0))
 env.reset()
@@ -149,7 +146,7 @@ env.plot()
 
 #%% Test saving a grid
 grid = Grid(6, 6)
-grid[4:9,:9] = 1
+grid[4:9, :9] = 1
 grid.save('visgrid/envs/saved/u_maze_6x6.txt')
 env = GridworldEnv.from_grid(grid, goal_position=(0, 0), agent_position=(5, 0))
 env.reset()
