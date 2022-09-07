@@ -27,11 +27,19 @@ class GridworldEnv(gym.Env):
     }
     _action_offsets = {action_id: np.array(offset) for offset, action_id in _action_ids.items()}
 
+    dimensions_6x6_to_28x28 = {
+        'wall_width': 1,
+        'cell_width': 3,
+        'character_width': 1,
+        'depot_width': 0,
+        'border_widths': (2, 1),
+        'img_shape': (28, 28),
+    }
     dimensions_6x6_to_64x64 = {
         'wall_width': 1,
         'cell_width': 9,
         'character_width': 5,
-        'depot_width': 2,
+        'depot_width': 3,
         'border_widths': (2, 1),
         'img_shape': (64, 64),
     }
