@@ -131,6 +131,13 @@ class Grid:
 
     @classmethod
     def generate_four_rooms(cls):
+        """
+        Layout for Four Rooms domain
+
+        Adapted from:
+            Sutton, Precup, & Singh. "Between MDPs and semi-MDPs: A framework for temporal
+            abstraction in reinforcement learning", Artificial Intelligence, 1999
+        """
         grid = cls(13, 13)
 
         # layout walls / hallways
