@@ -35,6 +35,14 @@ class GridworldEnv(gym.Env):
         'border_widths': (2, 1),
         'img_shape': (64, 64),
     }
+    dimensions_13x13_to_84x84 = {
+        'wall_width': 1,
+        'cell_width': 5,
+        'character_width': 3,
+        'depot_width': 2,
+        'border_widths': (3, 2),
+        'img_shape': (84, 84),
+    }
     _default_dimensions = dimensions_6x6_to_64x64
 
     def __init__(self,

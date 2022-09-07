@@ -130,6 +130,38 @@ class Grid:
         return grid
 
     @classmethod
+    def generate_four_rooms(cls):
+        grid = cls(13, 13)
+
+        # layout walls / hallways
+        mid = 13
+        offset = mid + 2
+        v_hallways = (5, 19)
+        h_hallways = (7, 21)
+
+        # build outer walls
+        grid[:3, :] = 1
+        grid[-3:, :] = 1
+        grid[:, :3] = 1
+        grid[:, -3:] = 1
+
+        # build inner walls
+        center_slice = slice(mid - 1, mid + 2)
+        offset_slice = slice(offset - 1, offset + 2)
+        grid[:, center_slice] = 1
+        grid[center_slice, :mid] = 1
+        grid[offset_slice, mid:] = 1
+
+        # build hallways
+        interior = slice(3, -3)
+        for hall in v_hallways:
+            grid[interior, hall] = 0
+        for hall in h_hallways:
+            grid[hall, interior] = 0
+
+        return grid
+
+    @classmethod
     def generate_maze(cls, rows, cols):
         grid = cls(rows, cols)
         walls = []
