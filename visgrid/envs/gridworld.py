@@ -10,7 +10,6 @@ import numpy as np
 
 from .components import Grid, Agent, Depot
 from .. import utils
-from ..wrappers.sensors import Sensor
 
 class GridworldEnv(gym.Env):
     # Offsets:
@@ -28,20 +27,18 @@ class GridworldEnv(gym.Env):
     _action_offsets = {action_id: np.array(offset) for offset, action_id in _action_ids.items()}
 
     dimensions_6x6_to_18x18 = {
-        'wall_width': 1,
+        'wall_width': 0,
         'cell_width': 3,
         'character_width': 1,
         'depot_width': 1,
         'border_widths': (0, 0),
-        'img_shape': (18, 18),
     }
     dimensions_6x6_to_28x28 = {
         'wall_width': 1,
         'cell_width': 3,
         'character_width': 1,
-        'depot_width': 0,
+        'depot_width': 1,
         'border_widths': (2, 1),
-        'img_shape': (28, 28),
     }
     dimensions_6x6_to_64x64 = {
         'wall_width': 1,
@@ -49,7 +46,6 @@ class GridworldEnv(gym.Env):
         'character_width': 5,
         'depot_width': 3,
         'border_widths': (2, 1),
-        'img_shape': (64, 64),
     }
     dimensions_13x13_to_84x84 = {
         'wall_width': 1,
@@ -57,7 +53,6 @@ class GridworldEnv(gym.Env):
         'character_width': 3,
         'depot_width': 2,
         'border_widths': (3, 2),
-        'img_shape': (84, 84),
     }
     _default_dimensions = dimensions_6x6_to_64x64
 
@@ -72,7 +67,6 @@ class GridworldEnv(gym.Env):
                  agent_position: Tuple = None,
                  goal_position: Tuple = None,
                  image_observations: bool = True,
-                 sensor: Sensor = None,
                  dimensions: dict = None):
         """
         Visual gridworld environment
@@ -99,8 +93,6 @@ class GridworldEnv(gym.Env):
         image_observations:
             True: Observations are images
             False: Observations use internal state vector
-        sensor: (deprecated) an operation (or chain of operations) to apply after generating
-            each observation
         dimensions: dictionary of size information for rendering
         """
         self.grid = Grid(rows, cols) if grid is None else grid
@@ -110,19 +102,28 @@ class GridworldEnv(gym.Env):
         self.hidden_goal = hidden_goal
         self.terminate_on_goal = terminate_on_goal
         self.image_observations = image_observations
-        self.sensor = sensor if sensor is not None else Sensor()
         self.dimensions = dimensions if dimensions is not None else self._default_dimensions
 
         self._initialize_agent(agent_position)
         self._initialize_depots(goal_position)
 
         self.action_space = spaces.Discrete(4)
+        self._initialize_missing_size_info()
         self._initialize_state_space()
         self._initialize_obs_space()
 
     # ------------------------------------------------------------
     # Initialization
     # ------------------------------------------------------------
+
+    def _initialize_missing_size_info(self):
+        if self.dimensions.get('img_shape', None) is None:
+            ww = self.dimensions['wall_width']
+            cw = self.dimensions['cell_width']
+            bw = sum(self.dimensions['border_widths'])
+            rows = ww * (self.rows + 1) + cw * self.rows + bw
+            cols = ww * (self.cols + 1) + cw * self.cols + bw
+            self.dimensions['img_shape'] = rows, cols
 
     def _initialize_state_space(self):
         factor_sizes = (self.rows, self.cols, self.rows, self.cols)
@@ -133,7 +134,7 @@ class GridworldEnv(gym.Env):
             img_shape = self.dimensions['img_shape'] + (3, )
             self.observation_space = spaces.Box(0.0, 1.0, img_shape, dtype=np.float32)
         else:
-            obs_shape = self.state_space.shape
+            obs_shape = self.state_space.nvec
             if self.hidden_goal:
                 obs_shape = obs_shape[:2]
             self.observation_space = spaces.MultiDiscrete(obs_shape, dtype=int)
@@ -273,10 +274,12 @@ class GridworldEnv(gym.Env):
         if state is None:
             state = self.get_state()
         if self.image_observations:
-            state = self._render(state)
+            obs = self._render(state)
         elif self.hidden_goal:
-            state = state[:2]
-        return self.sensor(state)
+            obs = state[:2]
+        else:
+            obs = state
+        return obs
 
     def _get_info(self, state=None):
         if state is None:
@@ -298,12 +301,14 @@ class GridworldEnv(gym.Env):
     # Rendering
     # ------------------------------------------------------------
 
-    def plot(self):
-        ob = self.get_observation()
+    def plot(self, ob=None, blocking=True):
+        if ob is None:
+            ob = self.get_observation()
         plt.imshow(ob)
         plt.xticks([])
         plt.yticks([])
-        plt.show()
+        if blocking:
+            plt.show()
 
     def _render(self, state: Optional[Tuple] = None) -> np.ndarray:
         current_state = self.get_state()

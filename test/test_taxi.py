@@ -5,8 +5,6 @@ from typing import Tuple
 import numpy as np
 
 from visgrid.envs import TaxiEnv
-from visgrid.wrappers.sensors import *
-
 from visgrid.agents.expert import TaxiExpert
 
 #%% Test shapes

@@ -1,5 +1,5 @@
 import copy
-from typing import Tuple, Union
+from typing import Tuple, Union, Optional
 
 import numpy as np
 from gym import spaces
@@ -7,7 +7,6 @@ from gym import spaces
 from .gridworld import GridworldEnv
 from .components import Passenger, Depot
 from .. import utils
-from ..wrappers.sensors import Sensor
 
 class TaxiEnv(GridworldEnv):
     INTERACT = 4
@@ -43,7 +42,6 @@ class TaxiEnv(GridworldEnv):
                  terminate_on_goal: bool = True,
                  depot_dropoff_only: bool = False,
                  image_observations: bool = True,
-                 sensor: Sensor = None,
                  dimensions: dict = None):
         """
         Visual taxi environment
@@ -71,8 +69,6 @@ class TaxiEnv(GridworldEnv):
         image_observations:
             True: Observations are images
             False: Observations use internal state vector
-        sensor: (deprecated) an operation (or chain of operations) to apply after generating
-            each observation
         dimensions: dictionary of size information for rendering
         """
         if size not in [5, 10]:
@@ -91,7 +87,6 @@ class TaxiEnv(GridworldEnv):
                          fixed_goal=False,
                          hidden_goal=False,
                          image_observations=image_observations,
-                         sensor=sensor,
                          dimensions=dimensions)
 
         self.goal = None

@@ -5,17 +5,20 @@ import seeding
 from tqdm import tqdm
 
 from visgrid.envs import GridworldEnv
-from visgrid.wrappers.sensors import *
+from visgrid.wrappers.transforms import wrap_gridworld
 
-env = GridworldEnv(rows=6, cols=6)
-env.reset_agent()
-
-sensor = SensorChain([
-    OffsetSensor(offset=(0.5, 0.5)),
-    ImageSensor(range=((0, env.rows), (0, env.cols)), pixel_density=3),
-    BlurSensor(sigma=0.6, truncate=1.),
-    NoiseSensor(sigma=0.01)
-])
+env = GridworldEnv(rows=6,
+                   cols=6,
+                   exploring_starts=True,
+                   terminate_on_goal=False,
+                   fixed_goal=True,
+                   hidden_goal=True,
+                   agent_position=(5, 3),
+                   goal_position=(4, 0),
+                   image_observations=True,
+                   dimensions=GridworldEnv.dimensions_6x6_to_18x18)
+env = wrap_gridworld(env)
+env.reset()
 
 #%%
 # %matplotlib agg

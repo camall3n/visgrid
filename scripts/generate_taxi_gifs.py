@@ -8,14 +8,15 @@ from tqdm import tqdm
 
 from visgrid.envs import GridworldEnv, TaxiEnv
 from visgrid.agents.expert import TaxiExpert
-from visgrid.wrappers.sensors import *
+from visgrid.wrappers.transforms import NoiseWrapper, ClipWrapper
 
 env = TaxiEnv(exploring_starts=False,
               terminate_on_goal=True,
               depot_dropoff_only=False,
-              image_observations=True,
-              sensor=SensorChain([NoiseSensor(sigma=0.05),
-                                  ClipSensor(0.0, 1.0)]))
+              image_observations=True)
+env = NoiseWrapper(env, 0.05)
+env = ClipWrapper(env)
+
 env.reset()
 env.agent.position = (0, 4)
 env.passengers[0].position = (0, 0)
@@ -46,16 +47,17 @@ env = TaxiEnv(size=10,
               exploring_starts=False,
               terminate_on_goal=True,
               depot_dropoff_only=False,
-              image_observations=True,
-              sensor=SensorChain([NoiseSensor(sigma=0.05),
-                                  ClipSensor(0.0, 1.0)]))
+              image_observations=True)
+env = NoiseWrapper(env, 0.05)
+env = ClipWrapper(env)
+
 ob, _ = env.reset()
 expert = TaxiExpert(env)
 images.append(ob)
 n_steps = 0
 while n_steps < 1000:
     action = expert.act()
-    ob, _, terminal, _, _ = env.step(action)
+    ob, reward, terminal, _, _ = env.step(action)
     images.append(ob)
     n_steps += 1
     if terminal:
