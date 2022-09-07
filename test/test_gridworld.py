@@ -53,15 +53,9 @@ def sensor_env(initial_agent_position, initial_goal_position):
                        hidden_goal=True,
                        agent_position=initial_agent_position,
                        goal_position=initial_goal_position,
-                       image_observations=False,
-                       dimensions=GridworldEnv.dimensions_6x6_to_18x18)
-    # env = GaussianBlurWrapper(env, sigma=0.6, truncate=1.),
-    # env = NoiseWrapper(env, sigma=0.01)
+                       image_observations=False)
     env.reset()
     return env
-
-# def test_sensor_chain_produces_noisy_images(sensor_env):
-#     assert sensor_env.get_observation().shape == (18, 18)
 
 def test_deterministic_action_sequence(sensor_env, initial_agent_position, initial_goal_position):
     obs, rewards, terminals, truncateds, infos = [], [], [], [], []
