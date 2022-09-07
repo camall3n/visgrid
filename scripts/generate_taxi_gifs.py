@@ -17,11 +17,10 @@ env = TaxiEnv(exploring_starts=False,
 env = NoiseWrapper(env, 0.05)
 env = ClipWrapper(env)
 
-env.reset()
+ob, _ = env.reset()
 env.agent.position = (0, 4)
 env.passengers[0].position = (0, 0)
 env.passengers[0].color = 'yellow'
-ob = env.get_observation()
 
 images = []
 images.append(ob)

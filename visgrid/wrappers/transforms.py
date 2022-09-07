@@ -1,14 +1,12 @@
 from typing import Optional
 
-from gym.core import Wrapper
-import gym.spaces
 import numpy as np
 
-from .core import NewObsWrapper
+from .base import BaseObservationWrapper
 from visgrid.wrappers.grayscale import GrayscaleWrapper
 from visgrid.envs import GridworldEnv
 
-class TransformWrapper(NewObsWrapper):
+class TransformWrapper(BaseObservationWrapper):
     def __init__(self, env, f, name: Optional[str] = None) -> None:
         super().__init__(env)
         self.f = f

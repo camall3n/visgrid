@@ -40,8 +40,8 @@ def test_hidden_goal_changes_obs_size(initial_agent_position, initial_goal_posit
                        agent_position=initial_agent_position,
                        goal_position=initial_goal_position,
                        image_observations=False)
-    env.reset()
-    assert env.get_observation().shape == (2, )
+    ob, _ = env.reset()
+    assert ob.shape == (2, )
 
 @pytest.fixture
 def sensor_env(initial_agent_position, initial_goal_position):
@@ -98,7 +98,7 @@ def env4(initial_agent_position, initial_goal_position):
 
 @pytest.fixture
 def hidden_goal_image(env4):
-    return env4.get_observation()
+    return env4.reset()[0]
 
 def test_image_observations_with_hidden_goal(hidden_goal_image):
     assert hidden_goal_image.shape == (64, 64, 3)
@@ -118,7 +118,7 @@ def env5(initial_agent_position, initial_goal_position):
     return env
 
 def test_image_observations_with_visible_goal(env5, hidden_goal_image):
-    visible_goal_image = env5.get_observation()
+    visible_goal_image, _ = env5.reset()
     assert not np.all(hidden_goal_image == visible_goal_image)
 
 def test_reaching_goal_when_terminate_on_goal_is_false(env5):

@@ -1,13 +1,21 @@
 import gym
 
 class BaseObservationWrapper(gym.ObservationWrapper):
-    def __init__(self, env: gym.Env):
+    """ObservationWrapper stand-in for new-style gym API"""
+    def __init__(self, env) -> None:
         super().__init__(env, new_step_api=True)
 
     def reset(self, **kwargs):
-        obs, info = self.env.reset(**kwargs)
-        return self.observation(obs), info
+        """Resets the environment, returning a modified observation using :meth:`self.observation`."""
+        observation, info = super().reset(**kwargs)
+        return self.observation(observation), info
 
-    def get_observation(self):
-        obs = self.env.get_observation()
-        return self.observation(obs)
+    def step(self, action):
+        """Returns a modified observation using :meth:`self.observation` after calling :meth:`env.step`."""
+        step_returns = self.env.step(action)
+        observation, reward, terminated, truncated, info = step_returns
+        return self.observation(observation), reward, terminated, truncated, info
+
+    def observation(self, observation):
+        """Returns a modified observation."""
+        raise NotImplementedError

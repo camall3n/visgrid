@@ -32,11 +32,12 @@ def env(initial_agent_position, initial_goal_position):
     return env
 
 def test_sensor_chain_produces_images(env):
-    ob = env.reset()[0]
+    ob, _ = env.reset()
     assert ob.shape == (18, 18)
 
 def test_sensor_chain_produces_images(env):
-    assert env.get_observation().shape == (18, 18, 3)
+    ob, _ = env.unwrapped.reset()
+    assert ob.shape == (18, 18, 3)
 
 def test_sensor_chain_produces_noisy_images(env):
     start_ob = env.reset()[0]

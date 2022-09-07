@@ -13,10 +13,13 @@ n_samples = 500
 fig = plt.figure()
 fig.show()
 
+def render(s):
+    return env.unwrapped.get_observation(s)
+
 x = env.reset(seed=1)[0]
 for t in range(n_samples):
     s = env.get_state()
-    o = np.concatenate((env.get_observation(s), env.get_observation(x)), axis=1)
+    o = np.concatenate((render(s), render(x)), axis=1)
     plt.imshow(o)
     fig.canvas.draw()
     fig.canvas.flush_events()
