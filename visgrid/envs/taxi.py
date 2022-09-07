@@ -99,25 +99,23 @@ class TaxiEnv(GridworldEnv):
         self._initialize_passengers()
 
         self.action_space = spaces.Discrete(5)
-        self._initialize_state_space()
-        self._initialize_obs_space()
 
     # ------------------------------------------------------------
     # Initialization
     # ------------------------------------------------------------
 
     def _initialize_state_space(self):
-        taxi_state_shape = (self.rows, self.cols)
-        psgr_state_shape = (self.rows, self.cols, 2, len(self.depots))
-        state_shape = taxi_state_shape + (psgr_state_shape * self.n_passengers)
-        self.state_space = spaces.MultiDiscrete(state_shape, dtype=int)
+        taxi_factor_sizes = (self.rows, self.cols)
+        psgr_factor_sizes = (self.rows, self.cols, 2, len(self.depots))
+        factor_sizes = taxi_factor_sizes + (psgr_factor_sizes * self.n_passengers)
+        self.state_space = spaces.MultiDiscrete(factor_sizes, dtype=int)
 
     def _initialize_obs_space(self):
         if self.image_observations:
             img_shape = self.dimensions['img_shape'] + (3, )
             self.observation_space = spaces.Box(0.0, 1.0, img_shape, dtype=np.float32)
         else:
-            obs_shape = self.state_space.shape
+            obs_shape = self.state_space.nvec
             self.observation_space = spaces.MultiDiscrete(obs_shape, dtype=int)
 
     def _initialize_depots(self, _):

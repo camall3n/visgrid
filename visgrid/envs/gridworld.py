@@ -93,12 +93,16 @@ class GridworldEnv(gym.Env):
         self._initialize_depots(goal_position)
 
         self.action_space = spaces.Discrete(4)
-        self.state_space = spaces.MultiDiscrete((rows, cols, rows, cols), dtype=int)
+        self._initialize_state_space()
         self._initialize_obs_space()
 
     # ------------------------------------------------------------
     # Initialization
     # ------------------------------------------------------------
+
+    def _initialize_state_space(self):
+        factor_sizes = (self.rows, self.cols, self.rows, self.cols)
+        self.state_space = spaces.MultiDiscrete(factor_sizes, dtype=int)
 
     def _initialize_obs_space(self):
         if self.image_observations:
