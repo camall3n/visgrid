@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from visgrid.envs import GridworldEnv
-
 from visgrid.wrappers.transforms import wrap_gridworld
 
 @pytest.fixture

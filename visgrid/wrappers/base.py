@@ -7,7 +7,8 @@ class BaseObservationWrapper(gym.ObservationWrapper):
 
     def reset(self, **kwargs):
         """Resets the environment, returning a modified observation using :meth:`self.observation`."""
-        observation, info = super().reset(**kwargs)
+        # Don't call super() here or things will break for the new-style API
+        observation, info = self.env.reset(**kwargs)
         return self.observation(observation), info
 
     def step(self, action):

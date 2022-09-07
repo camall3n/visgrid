@@ -3,9 +3,9 @@ import numpy as np
 import gym
 from gym.spaces import Box
 
-from .core import NewObsWrapper
+from .base import BaseObservationWrapper
 
-class GrayscaleWrapper(NewObsWrapper):
+class GrayscaleWrapper(BaseObservationWrapper):
     """Convert the image observation from RGB to grayscale.
     """
     def __init__(self, env: gym.Env, keep_dim: bool = False):
