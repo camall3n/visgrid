@@ -27,6 +27,14 @@ class GridworldEnv(gym.Env):
     }
     _action_offsets = {action_id: np.array(offset) for offset, action_id in _action_ids.items()}
 
+    dimensions_6x6_to_18x18 = {
+        'wall_width': 1,
+        'cell_width': 3,
+        'character_width': 1,
+        'depot_width': 1,
+        'border_widths': (0, 0),
+        'img_shape': (18, 18),
+    }
     dimensions_6x6_to_28x28 = {
         'wall_width': 1,
         'cell_width': 3,
@@ -405,25 +413,30 @@ class GridworldEnv(gym.Env):
         cell_width = self.dimensions['cell_width']
         agent_width = self.dimensions['character_width']
         assert agent_width <= cell_width
-        sw_bg = np.tri(cell_width // 2, k=(cell_width // 2 - agent_width // 2 - 2))
-        nw_bg = np.flipud(sw_bg)
-        ne_bg = np.fliplr(nw_bg)
-        se_bg = np.fliplr(sw_bg)
+        if agent_width < 3:
+            patch = np.zeros((cell_width, cell_width))
+            mid = slice(int(np.floor(cell_width / 2 - 0.5)), int(np.ceil(cell_width / 2 + 0.5)))
+            patch[mid, mid] = 1
+        else:
+            sw_bg = np.tri(cell_width // 2, k=(cell_width // 2 - agent_width // 2 - 2))
+            nw_bg = np.flipud(sw_bg)
+            ne_bg = np.fliplr(nw_bg)
+            se_bg = np.fliplr(sw_bg)
 
-        bg = np.block([[nw_bg, ne_bg], [sw_bg, se_bg]])
+            bg = np.block([[nw_bg, ne_bg], [sw_bg, se_bg]])
 
-        # add center row / column for odd widths
-        if cell_width % 2 == 1:
-            bg = np.insert(bg, cell_width // 2, 0, axis=0)
-            bg = np.insert(bg, cell_width // 2, 0, axis=1)
+            # add center row / column for odd widths
+            if cell_width % 2 == 1:
+                bg = np.insert(bg, cell_width // 2, 0, axis=0)
+                bg = np.insert(bg, cell_width // 2, 0, axis=1)
 
-        # crop edges to a circle and invert
-        excess = (cell_width - agent_width) // 2
-        bg[:excess, :] = 1
-        bg[:, :excess] = 1
-        bg[-excess:, :] = 1
-        bg[:, -excess:] = 1
-        patch = (1 - bg)
+            # crop edges to a circle and invert
+            excess = (cell_width - agent_width) // 2
+            bg[:excess, :] = 1
+            bg[:, :excess] = 1
+            bg[-excess:, :] = 1
+            bg[:, -excess:] = 1
+            patch = (1 - bg)
 
         patch = utils.to_rgb(patch, color)
         return patch
