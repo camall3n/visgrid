@@ -4,8 +4,9 @@ import copy
 
 import numpy as np
 
-from visgrid.wrappers.permutation import PermuteFactorsWrapper
+from visgrid.wrappers.permutation import FactorPermutationWrapper, ObservationPermutationWrapper
 from visgrid.envs import TaxiEnv
+
 #%%
 def test_permutation_indexing():
     ob = np.arange(1, 6)
@@ -31,7 +32,7 @@ def test_permutation_indexing():
 def test_variable_sizes():
     factor_sizes = (6, 2, 4)
     N = 10
-    obs = np.random.randint(factor_sizes, size=(N,3))
+    obs = np.random.randint(factor_sizes, size=(N, 3))
     obs[0] = np.array([factor_sizes]) - 1
 
     perms = [np.random.permutation(fac_sz) for fac_sz in factor_sizes]
@@ -49,10 +50,10 @@ def env():
     )
     return env
 
-@pytest.fixture
-def w_env(env):
+@pytest.fixture(params=[FactorPermutationWrapper, ObservationPermutationWrapper])
+def w_env(request, env):
     env = copy.deepcopy(env)
-    return PermuteFactorsWrapper(env)
+    return request.param(env)
 
 def test_same_initial_state(env, w_env):
     env.reset(seed=1)
@@ -94,6 +95,8 @@ def test_same_action_selections(env, w_env):
 def test_same_unchanged_factor_indices(env, w_env):
     env.reset(seed=1)
     w_env.reset(seed=1)
+    deltas = []
+    w_deltas = []
     for ep in range(100):
         ob = env.reset()[0]
         w_ob = w_env.reset()[0]
@@ -102,9 +105,17 @@ def test_same_unchanged_factor_indices(env, w_env):
             action = env.action_space.sample()
             ob = env.step(action)[0]
             w_ob = w_env.step(action)[0]
-            unchanged = np.where(ob == prev_ob)
-            assert np.all(w_ob[unchanged] == prev_w_ob[unchanged])
+            deltas.append(ob - prev_ob)
+            w_deltas.append(w_ob - prev_w_ob)
             prev_ob, prev_w_ob = ob, w_ob
+    deltas = np.stack(deltas)
+    w_deltas = np.stack(w_deltas)
+
+    unchanged = np.where(deltas == 0)
+    if isinstance(w_env, FactorPermutationWrapper):
+        assert np.all(w_deltas[unchanged] == 0)
+    elif isinstance(w_env, ObservationPermutationWrapper):
+        assert not np.all(w_deltas[unchanged] == 0)
 
 def test_same_obs_range(env, w_env):
     env.reset(seed=1)
