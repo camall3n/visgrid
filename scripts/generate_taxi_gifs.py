@@ -13,7 +13,7 @@ from visgrid.wrappers.transforms import NoiseWrapper, ClipWrapper
 env = TaxiEnv(exploring_starts=False,
               terminate_on_goal=True,
               depot_dropoff_only=False,
-              image_observations=True)
+              rendering=True)
 env = NoiseWrapper(env, 0.05)
 env = ClipWrapper(env)
 
@@ -46,7 +46,7 @@ env = TaxiEnv(size=10,
               exploring_starts=False,
               terminate_on_goal=True,
               depot_dropoff_only=False,
-              image_observations=True)
+              rendering=True)
 env = NoiseWrapper(env, 0.05)
 env = ClipWrapper(env)
 

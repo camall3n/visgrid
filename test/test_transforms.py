@@ -24,7 +24,7 @@ def env(initial_agent_position, initial_goal_position):
                        hidden_goal=True,
                        agent_position=initial_agent_position,
                        goal_position=initial_goal_position,
-                       image_observations=True,
+                       should_render=True,
                        dimensions=GridworldEnv.dimensions_6x6_to_18x18)
     env = wrap_gridworld(env)
     env.reset()

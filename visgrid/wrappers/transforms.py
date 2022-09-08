@@ -46,8 +46,7 @@ def InvertWrapper(env, max_value=1):
 
 def wrap_gridworld(env):
     assert isinstance(env.unwrapped, GridworldEnv)
-
-    env.unwrapped.image_observations = True
+    env.unwrapped.set_rendering(enabled=True)
 
     env = GrayscaleWrapper(env)
     env = GaussianBlurWrapper(env)

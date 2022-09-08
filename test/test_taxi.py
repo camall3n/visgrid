@@ -16,7 +16,7 @@ def state_env():
                    exploring_starts=False,
                    terminate_on_goal=False,
                    depot_dropoff_only=False,
-                   image_observations=False)
+                   should_render=False)
 
 @pytest.fixture
 def initial_state(state_env):
@@ -72,9 +72,9 @@ def img_env():
                    exploring_starts=False,
                    terminate_on_goal=False,
                    depot_dropoff_only=False,
-                   image_observations=True)
+                   should_render=True)
 
-def test_image_observations(img_env):
+def test_rendering(img_env):
     ob, info = img_env.reset()
     assert ob.shape == (84, 84, 3)
     assert info['state'].shape == (6, )
@@ -160,7 +160,7 @@ def exploring_env():
                   exploring_starts=True,
                   terminate_on_goal=True,
                   depot_dropoff_only=False,
-                  image_observations=True)
+                  should_render=True)
     env.reset()
     return env
 
@@ -199,7 +199,7 @@ def test_multiple_passengers():
                   exploring_starts=False,
                   terminate_on_goal=True,
                   depot_dropoff_only=False,
-                  image_observations=True)
+                  should_render=True)
     env.reset()
     expert = TaxiExpert(env)
     n_steps = 0
@@ -218,7 +218,7 @@ def test_extended_10x10_environment_with_7_passengers():
                   exploring_starts=False,
                   terminate_on_goal=True,
                   depot_dropoff_only=False,
-                  image_observations=True)
+                  should_render=True)
     env.reset()
     expert = TaxiExpert(env)
     n_steps = 0

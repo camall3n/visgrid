@@ -41,7 +41,7 @@ class TaxiEnv(GridworldEnv):
                  exploring_starts: bool = True,
                  terminate_on_goal: bool = True,
                  depot_dropoff_only: bool = False,
-                 image_observations: bool = True,
+                 should_render: bool = True,
                  dimensions: dict = None):
         """
         Visual taxi environment
@@ -66,10 +66,10 @@ class TaxiEnv(GridworldEnv):
         depot_dropoff_only:
             True: passengers can only be dropped off at (vacant) depots
             False: passengers can be dropped off anywhere in the grid
-        image_observations:
+        should_render:
             True: Observations are images
             False: Observations use internal state vector
-        dimensions: dictionary of size information for rendering
+        dimensions: dictionary of size information for should_render
         """
         if size not in [5, 10]:
             raise NotImplementedError('size must be in {5, 10}')
@@ -86,7 +86,7 @@ class TaxiEnv(GridworldEnv):
                          terminate_on_goal=terminate_on_goal,
                          fixed_goal=False,
                          hidden_goal=False,
-                         image_observations=image_observations,
+                         should_render=should_render,
                          dimensions=dimensions)
 
         self.goal = None
@@ -106,7 +106,7 @@ class TaxiEnv(GridworldEnv):
         self.state_space = spaces.MultiDiscrete(factor_sizes, dtype=int)
 
     def _initialize_obs_space(self):
-        if self.image_observations:
+        if self.should_render:
             img_shape = self.dimensions['img_shape'] + (3, )
             self.observation_space = spaces.Box(0.0, 1.0, img_shape, dtype=np.float32)
         else:

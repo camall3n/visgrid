@@ -24,7 +24,7 @@ def test_initial_positions(initial_agent_position, initial_goal_position):
                        hidden_goal=False,
                        agent_position=initial_agent_position,
                        goal_position=initial_goal_position,
-                       image_observations=False)
+                       should_render=False)
 
     assert env.reset()[0].shape == (4, )
     assert tuple(env.get_state()[:2]) == initial_agent_position
@@ -39,7 +39,7 @@ def test_hidden_goal_changes_obs_size(initial_agent_position, initial_goal_posit
                        hidden_goal=True,
                        agent_position=initial_agent_position,
                        goal_position=initial_goal_position,
-                       image_observations=False)
+                       should_render=False)
     ob, _ = env.reset()
     assert ob.shape == (2, )
 
@@ -53,7 +53,7 @@ def sensor_env(initial_agent_position, initial_goal_position):
                        hidden_goal=True,
                        agent_position=initial_agent_position,
                        goal_position=initial_goal_position,
-                       image_observations=False)
+                       should_render=False)
     env.reset()
     return env
 
@@ -86,7 +86,7 @@ def env4(initial_agent_position, initial_goal_position):
                        hidden_goal=True,
                        agent_position=initial_agent_position,
                        goal_position=initial_goal_position,
-                       image_observations=True)
+                       should_render=True)
     env.reset()
     return env
 
@@ -94,7 +94,7 @@ def env4(initial_agent_position, initial_goal_position):
 def hidden_goal_image(env4):
     return env4.reset()[0]
 
-def test_image_observations_with_hidden_goal(hidden_goal_image):
+def test_rendering_with_hidden_goal(hidden_goal_image):
     assert hidden_goal_image.shape == (64, 64, 3)
 
 @pytest.fixture
@@ -107,11 +107,11 @@ def env5(initial_agent_position, initial_goal_position):
                        hidden_goal=False,
                        agent_position=initial_agent_position,
                        goal_position=initial_goal_position,
-                       image_observations=True)
+                       should_render=True)
     env.reset()
     return env
 
-def test_image_observations_with_visible_goal(env5, hidden_goal_image):
+def test_rendering_with_visible_goal(env5, hidden_goal_image):
     visible_goal_image, _ = env5.reset()
     assert not np.all(hidden_goal_image == visible_goal_image)
 
@@ -132,7 +132,7 @@ def env6(initial_agent_position, initial_goal_position):
                        hidden_goal=False,
                        agent_position=initial_agent_position,
                        goal_position=initial_goal_position,
-                       image_observations=True)
+                       should_render=True)
     env.reset()
     return env
 
@@ -160,7 +160,7 @@ def env7(initial_agent_position):
                        fixed_goal=False,
                        hidden_goal=False,
                        agent_position=initial_agent_position,
-                       image_observations=True)
+                       should_render=True)
     env.reset()
     return env
 
@@ -185,7 +185,7 @@ def env8():
                        terminate_on_goal=True,
                        fixed_goal=False,
                        hidden_goal=False,
-                       image_observations=True)
+                       should_render=True)
     env.reset()
     return env
 

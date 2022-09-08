@@ -66,7 +66,7 @@ class GridworldEnv(gym.Env):
                  hidden_goal: bool = False,
                  agent_position: Tuple = None,
                  goal_position: Tuple = None,
-                 image_observations: bool = True,
+                 should_render: bool = True,
                  dimensions: dict = None):
         """
         Visual gridworld environment
@@ -90,10 +90,10 @@ class GridworldEnv(gym.Env):
             False: goal information is removed from the observations
         agent_position: position for the agent (disables exploring_starts)
         goal_position: position for the goal (disables fixed_goal)
-        image_observations:
+        should_render:
             True: Observations are images
             False: Observations use internal state vector
-        dimensions: dictionary of size information for rendering
+        dimensions: dictionary of size information for should_render
         """
         self.grid = Grid(rows, cols) if grid is None else grid
         assert rows == self.grid._rows and cols == self.grid._cols
@@ -101,7 +101,7 @@ class GridworldEnv(gym.Env):
         self.fixed_goal = fixed_goal if goal_position is None else True
         self.hidden_goal = hidden_goal
         self.terminate_on_goal = terminate_on_goal
-        self.image_observations = image_observations
+        self.should_render = should_render
         self.dimensions = dimensions if dimensions is not None else self._default_dimensions
 
         self._initialize_agent(agent_position)
@@ -130,14 +130,15 @@ class GridworldEnv(gym.Env):
         self.state_space = spaces.MultiDiscrete(factor_sizes, dtype=int)
 
     def _initialize_obs_space(self):
-        if self.image_observations:
-            img_shape = self.dimensions['img_shape'] + (3, )
-            self.observation_space = spaces.Box(0.0, 1.0, img_shape, dtype=np.float32)
-        else:
-            obs_shape = self.state_space.nvec
-            if self.hidden_goal:
-                obs_shape = obs_shape[:2]
-            self.observation_space = spaces.MultiDiscrete(obs_shape, dtype=int)
+        img_shape = self.dimensions['img_shape'] + (3, )
+        self.img_observation_space = spaces.Box(0.0, 1.0, img_shape, dtype=np.float32)
+
+        factor_obs_shape = self.state_space.nvec
+        if self.hidden_goal:
+            factor_obs_shape = factor_obs_shape[:2]
+        self.factor_observation_space = spaces.MultiDiscrete(factor_obs_shape, dtype=int)
+
+        self.set_rendering(self.should_render)
 
     def _initialize_agent(self, position=None):
         if position is None:
@@ -273,7 +274,7 @@ class GridworldEnv(gym.Env):
     def get_observation(self, state=None):
         if state is None:
             state = self.get_state()
-        if self.image_observations:
+        if self.should_render:
             obs = self._render(state)
         elif self.hidden_goal:
             obs = state[:2]
@@ -300,6 +301,13 @@ class GridworldEnv(gym.Env):
     # ------------------------------------------------------------
     # Rendering
     # ------------------------------------------------------------
+
+    def set_rendering(self, enabled=True):
+        self.should_render = enabled
+        if self.should_render:
+            self.observation_space = self.img_observation_space
+        else:
+            self.observation_space = self.factor_observation_space
 
     def plot(self, ob=None, blocking=True):
         if ob is None:
