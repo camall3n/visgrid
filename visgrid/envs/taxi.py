@@ -208,15 +208,15 @@ class TaxiEnv(GridworldEnv):
     def _reset_exploring_start(self):
         while True:
             # Fully randomize agent position
-            self.agent.position = self.random_grid_position()
+            self.agent.position = self._random_grid_position()
             self.passenger = None
 
             # Fully randomize passenger locations (without overlap)
             passenger_locs = np.stack(
-                [self.random_grid_position() for _ in range(self.n_passengers)], axis=0)
+                [self._random_grid_position() for _ in range(self.n_passengers)], axis=0)
             while len(np.unique(passenger_locs, axis=0)) < len(passenger_locs):
                 passenger_locs = np.stack(
-                    [self.random_grid_position() for _ in range(self.n_passengers)], axis=0)
+                    [self._random_grid_position() for _ in range(self.n_passengers)], axis=0)
             for i, p in enumerate(self.passengers):
                 p.position = passenger_locs[i]
 
