@@ -15,7 +15,7 @@ env = GridworldEnv(rows=6,
                    hidden_goal=True,
                    agent_position=(5, 3),
                    goal_position=(4, 0),
-                   rendering=True,
+                   should_render=True,
                    dimensions=GridworldEnv.dimensions_6x6_to_18x18)
 env = wrap_gridworld(env)
 env.reset()
