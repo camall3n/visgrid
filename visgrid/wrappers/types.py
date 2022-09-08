@@ -3,9 +3,7 @@ import numpy as np
 import gym
 from gym import spaces
 
-from .base import BaseObservationWrapper
-
-class NormalizedFloatWrapper(BaseObservationWrapper):
+class NormalizedFloatWrapper(gym.ObservationWrapper):
     """Convert discrete observations to floating point, normalized to interval [0,1]
     """
     def __init__(self, env: gym.Env):
