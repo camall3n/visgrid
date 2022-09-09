@@ -126,8 +126,8 @@ class GridworldEnv(gym.Env):
             self.dimensions['img_shape'] = rows, cols
 
     def _initialize_state_space(self):
-        factor_sizes = (self.rows, self.cols, self.rows, self.cols)
-        self.state_space = spaces.MultiDiscrete(factor_sizes, dtype=int)
+        self.factor_sizes = (self.rows, self.cols, self.rows, self.cols)
+        self.state_space = spaces.MultiDiscrete(self.factor_sizes, dtype=int)
 
     def _initialize_obs_space(self):
         img_shape = self.dimensions['img_shape'] + (3, )

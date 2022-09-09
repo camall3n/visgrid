@@ -102,8 +102,8 @@ class TaxiEnv(GridworldEnv):
     def _initialize_state_space(self):
         taxi_factor_sizes = (self.rows, self.cols)
         psgr_factor_sizes = (self.rows, self.cols, 2, len(self.depots))
-        factor_sizes = taxi_factor_sizes + (psgr_factor_sizes * self.n_passengers)
-        self.state_space = spaces.MultiDiscrete(factor_sizes, dtype=int)
+        self.factor_sizes = taxi_factor_sizes + (psgr_factor_sizes * self.n_passengers)
+        self.state_space = spaces.MultiDiscrete(self.factor_sizes, dtype=int)
 
     def _initialize_obs_space(self):
         if self.should_render:
