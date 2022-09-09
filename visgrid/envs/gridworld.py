@@ -268,8 +268,9 @@ class GridworldEnv(gym.Env):
         row, col, *remaining = state
         self.agent.position = row, col
         if remaining:
-            goal_row, goal_col = remaining
+            goal_row, goal_col, *remaining = remaining
             self.goal.position = goal_row, goal_col
+        assert not remaining
 
     def is_valid_pos(self, pos):
         row, col, goal_row, goal_col = pos
