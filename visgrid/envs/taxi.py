@@ -319,6 +319,14 @@ class TaxiEnv(GridworldEnv):
                 self.passenger = p
             self.passengers.append(p)
 
+    def is_valid_pos(self, pos):
+        taxi_row, taxi_col, psgr_row, psgr_col, in_taxi, goal_idx = pos
+        if not in_taxi:
+            return True
+        elif (taxi_row == psgr_row) and (taxi_col == psgr_col):
+            return True
+        return False
+
     def get_goal_state(self) -> np.ndarray:
         state = []
         # omit taxi position from goal state

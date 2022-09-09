@@ -37,7 +37,7 @@ class Grid:
         nonzero_indices = np.stack(np.nonzero(1 - cells)).T
         return rng.choice(nonzero_indices)
 
-    def has_wall(self, position, offset):
+    def has_wall(self, position, offset=(0, 0)):
         row, col = position
         d_row, d_col = offset
         wall_row = 2 * row + 1 + d_row

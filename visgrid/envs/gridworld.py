@@ -271,6 +271,12 @@ class GridworldEnv(gym.Env):
             goal_row, goal_col = remaining
             self.goal.position = goal_row, goal_col
 
+    def is_valid_pos(self, pos):
+        row, col, goal_row, goal_col = pos
+        if self.grid.has_wall((row, col)) or self.grid.has_wall((goal_row, goal_col)):
+            return False
+        return True
+
     def get_observation(self, state=None):
         if state is None:
             state = self.get_state()
