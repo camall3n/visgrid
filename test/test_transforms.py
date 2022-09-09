@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from visgrid.envs import GridworldEnv
-from visgrid.wrappers.transforms import wrap_gridworld
+from visgrid.wrappers import wrap_gridworld, NormalizedFloatWrapper
 
 @pytest.fixture
 def initial_agent_position():
@@ -30,11 +30,11 @@ def env(initial_agent_position, initial_goal_position):
     env.reset()
     return env
 
-def test_sensor_chain_produces_images(env):
+def test_wrapped_shapes(env):
     ob, _ = env.reset()
     assert ob.shape == (18, 18)
 
-def test_sensor_chain_produces_images(env):
+def test_unwrapped_shapes(env):
     ob, _ = env.unwrapped.reset()
     assert ob.shape == (18, 18, 3)
 
@@ -46,3 +46,9 @@ def test_sensor_chain_produces_noisy_images(env):
         state = env.get_state()
         assert np.all(state == start_state)
         assert not np.all(ob == start_ob)
+
+def test_normalized_float_wrapper():
+    env = GridworldEnv(10, 10, hidden_goal=True, should_render=False)
+    env = NormalizedFloatWrapper(env)
+    ob, _ = env.reset()
+    assert len(ob) == 2
