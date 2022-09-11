@@ -18,7 +18,6 @@ class TaxiEnv(GridworldEnv):
         'depot_width': 2,
         'border_widths': (2, 1),
         'dash_widths': (4, 4),
-        'img_shape': (64, 64),
     }
     dimensions_5x5_to_84x84 = {
         'wall_width': 2,
@@ -27,12 +26,10 @@ class TaxiEnv(GridworldEnv):
         'depot_width': 3,
         'border_widths': (4, 3),
         'dash_widths': (6, 6),
-        'img_shape': (84, 84),
     }
     dimensions_10x10_to_128x128 = copy.copy(dimensions_5x5_to_64x64)
     dimensions_10x10_to_128x128.update({
         'border_widths': (4, 3),
-        'img_shape': (128, 128),
     })
 
     def __init__(self,
