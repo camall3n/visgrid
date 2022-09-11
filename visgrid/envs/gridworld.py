@@ -126,7 +126,10 @@ class GridworldEnv(gym.Env):
             self.dimensions['img_shape'] = rows, cols
 
     def _initialize_state_space(self):
-        self.factor_sizes = (self.rows, self.cols, self.rows, self.cols)
+        if self.hidden_goal:
+            self.factor_sizes = (self.rows, self.cols)
+        else:
+            self.factor_sizes = (self.rows, self.cols, self.rows, self.cols)
         self.state_space = spaces.MultiDiscrete(self.factor_sizes, dtype=int)
 
     def _initialize_obs_space(self):
@@ -134,8 +137,6 @@ class GridworldEnv(gym.Env):
         self.img_observation_space = spaces.Box(0.0, 1.0, img_shape, dtype=np.float32)
 
         factor_obs_shape = self.state_space.nvec
-        if self.hidden_goal:
-            factor_obs_shape = factor_obs_shape[:2]
         self.factor_observation_space = spaces.MultiDiscrete(factor_obs_shape, dtype=int)
 
         self.set_rendering(self.should_render)
@@ -261,22 +262,43 @@ class GridworldEnv(gym.Env):
     def get_state(self):
         row, col = self.agent.position
         goal_row, goal_col = self.goal.position
-        state = [row, col, goal_row, goal_col]
+        if self.hidden_goal:
+            state = [row, col]
+        else:
+            state = [row, col, goal_row, goal_col]
         return np.asarray(state, dtype=int)
 
     def set_state(self, state):
+        is_valid, agent_pos, goal_pos = self._check_valid_state(state)
+        assert is_valid, 'Attempted to call set_state with an invalid state'
+        self.agent.position = agent_pos
+        if goal_pos is not None:
+            self.goal.position = goal_pos
+
+    def _check_valid_state(self, state):
+        is_valid = True
         row, col, *remaining = state
-        self.agent.position = row, col
+        agent_pos = row, col
+        goal_pos = None
+        if self.grid.has_wall(agent_pos):
+            is_valid = False
+
         if remaining:
+            if self.hidden_goal:
+                raise ValueError('State contained goal info while hidden_goal was set to True')
             goal_row, goal_col, *remaining = remaining
-            self.goal.position = goal_row, goal_col
+            if self.grid.has_wall((goal_row, goal_col)):
+                is_valid = False
+            goal_pos = goal_row, goal_col
+            if self.fixed_goal and tuple(self.goal.position) != goal_pos:
+                raise ValueError('Tried to change goal while fixed_goal was set to True')
         assert not remaining
 
-    def is_valid_pos(self, pos):
-        row, col, goal_row, goal_col = pos
-        if self.grid.has_wall((row, col)) or self.grid.has_wall((goal_row, goal_col)):
-            return False
-        return True
+        return is_valid, agent_pos, goal_pos
+
+    def is_valid_pos(self, state):
+        is_valid = self._check_valid_state(state)[0]
+        return is_valid
 
     def get_observation(self, state=None):
         if state is None:

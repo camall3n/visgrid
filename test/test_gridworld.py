@@ -57,7 +57,7 @@ def sensor_env(initial_agent_position, initial_goal_position):
     env.reset()
     return env
 
-def test_deterministic_action_sequence(sensor_env, initial_agent_position, initial_goal_position):
+def test_deterministic_action_sequence(sensor_env, initial_agent_position):
     obs, rewards, terminals, truncateds, infos = [], [], [], [], []
     for action in [0, 0, 1, 1, 2, 2, 0, 3, 3, 0]:
         assert sensor_env.can_run(action)
@@ -74,7 +74,6 @@ def test_deterministic_action_sequence(sensor_env, initial_agent_position, initi
     assert rewards.shape == terminals.shape == (10, )
     assert all(rewards == 0) and all(terminals == False)
     assert tuple(sensor_env.get_state()[:2]) != initial_agent_position
-    assert tuple(sensor_env.get_state()[2:]) == initial_goal_position
 
 @pytest.fixture
 def env4(initial_agent_position, initial_goal_position):
