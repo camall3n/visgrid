@@ -26,6 +26,13 @@ class GridworldEnv(gym.Env):
     }
     _action_offsets = {action_id: np.array(offset) for offset, action_id in _action_ids.items()}
 
+    dimensions_onehot = {
+        'wall_width': 0,
+        'cell_width': 1,
+        'character_width': 1,
+        'depot_width': 0,
+        'border_widths': (0, 0),
+    }
     dimensions_6x6_to_18x18 = {
         'wall_width': 0,
         'cell_width': 3,
