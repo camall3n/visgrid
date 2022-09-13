@@ -1,14 +1,13 @@
-import numpy as np
-
 import gym
 from gym import spaces
+import numpy as np
 
-class NormalizedFloatWrapper(gym.ObservationWrapper):
-    """Convert discrete observations to floating point, normalized to interval [0,1]
+class FloatWrapper(gym.ObservationWrapper):
+    """Convert discrete observations to floating point
     """
-    def __init__(self, env: gym.Env):
+    def __init__(self, env: gym.Env, dtype=np.float32):
         """
-        Convert discrete observations to floating point, normalized to interval [0,1]
+        Convert discrete observations to floating point
 
         Args:
             env (Env): The environment to apply the wrapper
@@ -26,11 +25,12 @@ class NormalizedFloatWrapper(gym.ObservationWrapper):
             factor_sizes = (2, ) * ob_space.n
             raise TypeError('Observation space must be Discrete or MultiDiscrete')
 
-        self.max_values = np.asarray(factor_sizes) - 1
-        self.observation_space = spaces.Box(low=0.0,
-                                            high=1.0,
+        max_values = (np.asarray(factor_sizes) - 1).astype(dtype)
+        min_values = np.zeros_like(max_values, dtype=dtype)
+        self.observation_space = spaces.Box(low=min_values,
+                                            high=max_values,
                                             shape=(len(factor_sizes), ),
-                                            dtype=np.float32)
+                                            dtype=dtype)
 
     def observation(self, observation):
-        return (observation / self.max_values).astype(np.float32)
+        return observation.astype(np.float32)
