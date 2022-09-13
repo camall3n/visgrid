@@ -11,6 +11,14 @@ from .. import utils
 class TaxiEnv(GridworldEnv):
     INTERACT = 4
 
+    dimensions_5x5_to_48x48 = {
+        'wall_width': 1,
+        'cell_width': 7,
+        'character_width': 3,
+        'depot_width': 1,
+        'border_widths': (4, 3),
+        'dash_width': 4,
+    }
     dimensions_5x5_to_64x64 = {
         'wall_width': 1,
         'cell_width': 11,
