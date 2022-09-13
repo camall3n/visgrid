@@ -110,14 +110,6 @@ class TaxiEnv(GridworldEnv):
         self.factor_sizes = taxi_factor_sizes + (psgr_factor_sizes * self.n_passengers)
         self.state_space = spaces.MultiDiscrete(self.factor_sizes, dtype=int)
 
-    def _initialize_obs_space(self):
-        if self.should_render:
-            img_shape = self.dimensions['img_shape'] + (3, )
-            self.observation_space = spaces.Box(0.0, 1.0, img_shape, dtype=np.float32)
-        else:
-            obs_shape = self.state_space.nvec
-            self.observation_space = spaces.MultiDiscrete(obs_shape, dtype=int)
-
     def _initialize_depots(self, _):
         if self.size == 5:
             self.depot_locs = {# yapf: disable
