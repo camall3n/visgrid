@@ -17,7 +17,7 @@ class TaxiEnv(GridworldEnv):
         'character_width': 7,
         'depot_width': 2,
         'border_widths': (2, 1),
-        'dash_widths': (4, 4),
+        'dash_width': 4,
     }
     dimensions_5x5_to_84x84 = {
         'wall_width': 2,
@@ -25,7 +25,7 @@ class TaxiEnv(GridworldEnv):
         'character_width': 9,
         'depot_width': 3,
         'border_widths': (4, 3),
-        'dash_widths': (6, 6),
+        'dash_width': 6,
     }
     dimensions_10x10_to_128x128 = copy.copy(dimensions_5x5_to_64x64)
     dimensions_10x10_to_128x128.update({
@@ -372,16 +372,16 @@ class TaxiEnv(GridworldEnv):
         """Generate a border to reflect the current in_taxi status"""
         in_taxi = (self.passenger is not None)
         img_shape = self.dimensions['img_shape']
-        dash_widths = self.dimensions['dash_widths']
+        dw = self.dimensions['dash_width']
         if in_taxi:
             # pad with dashes to HxW
-            dw_r, dw_c = dash_widths
-            n_repeats = (img_shape[0] // (2 * dw_r), img_shape[1] // (2 * dw_c))
-            image = np.tile(
-                np.block([
-                    [np.ones((dw_r, dw_c)), np.zeros((dw_r, dw_c))],
-                    [np.zeros((dw_r, dw_c)), np.ones((dw_r, dw_c))],
-                ]), n_repeats)
+            checker_tile = np.block([
+                [np.ones((dw, dw)), np.zeros((dw, dw))],
+                [np.zeros((dw, dw)), np.ones((dw, dw))],
+            ])
+            pad_width = np.array(img_shape) - checker_tile.shape
+            pad_width = tuple(zip((0, 0), pad_width))
+            image = np.pad(checker_tile, pad_width, mode='wrap')
 
             # convert to color HxWx3
             image = np.tile(np.expand_dims(image, -1), (1, 1, 3))
