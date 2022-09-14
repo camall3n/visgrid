@@ -20,6 +20,12 @@ class GridworldExpert:
         else:
             return self._next_step_towards(goal_position)
 
+    def store(self, _):
+        pass
+
+    def update(self):
+        return 0.0
+
     def _next_step_towards(self, position):
         start = tuple(self.env.agent.position)
         target = tuple(position)
