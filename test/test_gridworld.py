@@ -117,7 +117,6 @@ def test_rendering_with_visible_goal(env5, hidden_goal_image):
 def test_reaching_goal_when_terminate_on_goal_is_false(env5):
     for action in [0, 0, 2, 0]:
         ob, reward, terminal, truncated, info = env5.step(action)
-    print(f'r = {reward}, terminal = {terminal}, truncated = {truncated}, info = {info}')
     assert env5._check_goal() == True
     assert reward == 0 and not terminal
 
@@ -139,7 +138,6 @@ def test_reaching_goal_when_terminate_on_goal_is_true(env6):
     for action in [0, 0, 2, 0]:
         assert env6.can_run(action)
         ob, reward, terminal, truncated, info = env6.step(action)
-    print(f'r = {reward}, terminal = {terminal}, truncated = {truncated}, info = {info}')
     assert env6._check_goal() == True
     assert not env6.can_run(0)
     assert reward == 1 and terminal
