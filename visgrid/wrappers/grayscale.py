@@ -22,12 +22,11 @@ class GrayscaleWrapper(gym.ObservationWrapper):
 
         obs_shape = self.observation_space.shape[:2]
         if self.keep_dim:
-            self.observation_space = Box(low=0,
-                                         high=255,
-                                         shape=(obs_shape[0], obs_shape[1], 1),
-                                         dtype=np.uint8)
-        else:
-            self.observation_space = Box(low=0, high=255, shape=obs_shape, dtype=np.uint8)
+            obs_shape = obs_shape + (1, )
+        self.observation_space = Box(low=0,
+                                     high=255,
+                                     shape=obs_shape,
+                                     dtype=self.observation_space.dtype)
 
     def observation(self, observation):
         """Converts the colour observation to greyscale.
