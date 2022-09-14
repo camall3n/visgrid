@@ -33,14 +33,21 @@ def initial_agent_position(initial_state):
 def initial_psgr_position(initial_state):
     return tuple(initial_state[2:4])
 
+def get_position_of_depot(env, depot_id):
+    return tuple(env.depots[env.depot_names[depot_id]].position)
+
 @pytest.fixture
 def initial_goal_position(state_env, initial_state):
     initial_psgr_goal_id = initial_state[-1]
-    return tuple(state_env.depots[state_env.depot_names[initial_psgr_goal_id]].position)
+    return get_position_of_depot(state_env, initial_psgr_goal_id)
 
-def test_initial_positions(initial_psgr_position, initial_agent_position, initial_goal_position):
+def test_initial_positions(state_env: TaxiEnv, initial_psgr_position, initial_agent_position,
+                           initial_goal_position):
     assert initial_psgr_position != initial_agent_position
     assert initial_psgr_position != initial_goal_position
+    for _ in range(100):
+        state_env.reset()
+        assert not state_env._check_goal()
 
 def test_random_action_sequence(state_env: TaxiEnv, initial_agent_position, initial_goal_position):
     env = state_env
@@ -61,7 +68,7 @@ def test_random_action_sequence(state_env: TaxiEnv, initial_agent_position, init
     assert any(rewards == 0) and any(terminals == False)
     state = env.get_state()
     agent_positions = [tuple(info['state'][:2]) for info in infos]
-    goal_position = tuple(env.depots[env.depot_names[state[-1]]].position)
+    goal_position = get_position_of_depot(env, state[-1])
     assert not all(agent_pos == initial_agent_position for agent_pos in agent_positions)
     assert goal_position == initial_goal_position
 
@@ -116,6 +123,7 @@ def test_pickup(img_env_with_passenger):
 @pytest.fixture
 def img_env_and_state_at_goal(img_env_with_passenger: TaxiEnv, img_env_expert: TaxiExpert):
     env = img_env_with_passenger
+    state = env.get_state()
     goal_depot = env.depots[env.passenger.color]
     while not img_env_expert._at(env.passenger, goal_depot):
         action = img_env_expert.act()
@@ -149,7 +157,7 @@ def test_reset_agent_and_goal_unique(img_env_with_passenger: TaxiEnv, initial_ag
         state = env.get_state()
         assert 0 <= state.min() and state.max() < 6
         reset_agent_positions.append(tuple(state[:2]))
-        reset_goal_positions.append(tuple(state[2:]))
+        reset_goal_positions.append(get_position_of_depot(env, state[-1]))
     assert not all([agent_pos == initial_agent_position for agent_pos in reset_agent_positions])
     assert not all([goal_pos == initial_goal_position for goal_pos in reset_goal_positions])
 
@@ -165,6 +173,9 @@ def exploring_env():
     return env
 
 def test_exploring_starts(exploring_env):
+    state = exploring_env.get_state()
+    initial_agent_pos = tuple(state[:2])
+    initial_goal_pos = get_position_of_depot(exploring_env, state[-1])
     reset_agent_positions = []
     reset_goal_positions = []
     for _ in range(100):
@@ -173,9 +184,9 @@ def test_exploring_starts(exploring_env):
         state = exploring_env.get_state()
         assert 0 <= state.min() and state.max() < 6
         reset_agent_positions.append(tuple(state[:2]))
-        reset_goal_positions.append(tuple(state[2:]))
-    assert not all([agent_pos == initial_agent_position for agent_pos in reset_agent_positions])
-    assert not all([goal_pos == initial_goal_position for goal_pos in reset_goal_positions])
+        reset_goal_positions.append(get_position_of_depot(exploring_env, state[-1]))
+    assert not all([agent_pos == initial_agent_pos for agent_pos in reset_agent_positions])
+    assert not all([goal_pos == initial_goal_pos for goal_pos in reset_goal_positions])
     at_depot = lambda agent_pos: any(
         [tuple(d.position) == agent_pos for d in exploring_env.depots.values()])
     assert not all([at_depot(agent_pos) for agent_pos in reset_agent_positions])
@@ -192,6 +203,29 @@ def test_terminate_on_goal(exploring_env):
             break
     assert terminal == True
     assert reward == 1
+
+def test_reset_agent_with_fixed_goal():
+    env = TaxiEnv(size=5,
+                  n_passengers=1,
+                  exploring_starts=False,
+                  terminate_on_goal=False,
+                  fixed_goal=True,
+                  depot_dropoff_only=False,
+                  should_render=False)
+    state = env.get_state()
+    initial_agent_pos = tuple(state[:2])
+    initial_goal_pos = get_position_of_depot(env, state[-1])
+    reset_agent_positions = []
+    reset_goal_positions = []
+    for _ in range(10):
+        env.reset()
+        assert not env._check_goal()
+        state = env.get_state()
+        assert 0 <= state.min() and state.max() < 6
+        reset_agent_positions.append(tuple(state[:2]))
+        reset_goal_positions.append(get_position_of_depot(env, state[-1]))
+    assert not all([agent_pos == initial_agent_pos for agent_pos in reset_agent_positions])
+    assert all([goal_pos == initial_goal_pos for goal_pos in reset_goal_positions])
 
 def test_multiple_passengers():
     env = TaxiEnv(size=5,

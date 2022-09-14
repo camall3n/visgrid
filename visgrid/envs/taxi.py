@@ -45,6 +45,7 @@ class TaxiEnv(GridworldEnv):
                  n_passengers: int = 1,
                  exploring_starts: bool = True,
                  terminate_on_goal: bool = True,
+                 fixed_goal: bool = False,
                  depot_dropoff_only: bool = False,
                  should_render: bool = True,
                  dimensions: dict = None):
@@ -89,7 +90,7 @@ class TaxiEnv(GridworldEnv):
                          cols=size,
                          exploring_starts=exploring_starts,
                          terminate_on_goal=terminate_on_goal,
-                         fixed_goal=False,
+                         fixed_goal=fixed_goal,
                          hidden_goal=False,
                          should_render=should_render,
                          dimensions=dimensions)
@@ -97,6 +98,7 @@ class TaxiEnv(GridworldEnv):
         self.goal = None
         self._initialize_walls()
         self._initialize_passengers()
+        self._initialize_goal()
 
         self.action_space = spaces.Discrete(5)
 
@@ -165,73 +167,78 @@ class TaxiEnv(GridworldEnv):
             raise ValueError(
                 f"'n_passengers' ({self.n_passengers}) must be between 0 and {max_passengers}")
 
-        self.passengers = [Passenger(color=c) for c in self.depot_names][:self.n_passengers]
+        goal_depots = copy.deepcopy(self.depot_names)
+        self.np_random.shuffle(goal_depots)
+        self.passengers = [Passenger(color=c) for c in goal_depots][:self.n_passengers]
+
+    def _initialize_goal(self):
+        self._reset_goal()
 
     # ------------------------------------------------------------
     # Environment API
     # ------------------------------------------------------------
 
     def _reset(self):
-        if self.exploring_starts:
-            self._reset_exploring_start()
-        else:
-            self._reset_classic_start()
+        if not self.fixed_goal:
+            self._reset_goal()
+
+        while True:
+            if self.exploring_starts:
+                self._reset_exploring_start()
+            else:
+                self._reset_classic_start()
+
+            s = self.get_state()
+            # Repeat until we aren't at a goal state
+            if not self._check_goal(s):
+                break
+
+    def _reset_goal(self, ):
+        # Give passengers random unique goal depots
+        goal_depots = copy.deepcopy(self.depot_names)
+        self.np_random.shuffle(goal_depots)
+        for p, g in zip(self.passengers, goal_depots[:self.n_passengers]):
+            p.color = g
 
     def _reset_classic_start(self):
-        # Place passengers randomly at unique depots
-        starting_depots = copy.deepcopy(self.depot_names)
-        self.np_random.shuffle(starting_depots)
+        # Place passengers at randomly chosen depots
+        start_depots = copy.deepcopy(self.depot_names)
+        self.np_random.shuffle(start_depots)
         for i, p in enumerate(self.passengers):
-            p.position = self.depots[starting_depots[i]].position
+            p.position = self.depots[start_depots[i]].position
             p.in_taxi = False
 
         # Place taxi at a different unique depot
-        self.agent.position = self.depots[starting_depots[-1]].position
-
-        # Generate list of goal depots for the passengers
-        goal_depots = copy.deepcopy(self.depot_names)
-        N = self.n_passengers
-        while True:
-            self.np_random.shuffle(goal_depots)
-            # Shuffle goal depots until no passenger is at their corresponding goal depot
-            start_and_goal_depots = zip(starting_depots[:N], goal_depots[:N])
-            if not any([start == goal for start, goal in start_and_goal_depots]):
-                break
-
-        # Update passenger colors to match their goal depots
-        for p, g in zip(self.passengers, goal_depots[:N]):
-            p.color = g
+        self.agent.position = self.depots[start_depots[-1]].position
+        self.passenger = None
 
     def _reset_exploring_start(self):
+        # Fully randomize passenger locations (without overlap)
         while True:
-            # Fully randomize agent position
-            self.agent.position = self._random_grid_position()
-            self.passenger = None
-
-            # Fully randomize passenger locations (without overlap)
             passenger_locs = np.stack(
                 [self._random_grid_position() for _ in range(self.n_passengers)], axis=0)
-            while len(np.unique(passenger_locs, axis=0)) < len(passenger_locs):
-                passenger_locs = np.stack(
-                    [self._random_grid_position() for _ in range(self.n_passengers)], axis=0)
-            for i, p in enumerate(self.passengers):
-                p.position = passenger_locs[i]
-
-            # Randomly decide whether to move the taxi to a passenger
-            if self.np_random.random() > 0.5:
-                # If so, randomly choose which passenger
-                p = self.np_random.choice(self.passengers)
-                self.agent.position = p.position
-
-                # Randomly decide if that passenger should be *in* the taxi
-                if self.np_random.random() > 0.5:
-                    p.in_taxi = True
-                    self.passenger = p
-
-            s = self.get_state()
-            # Repeat until we aren't at a goal state (or stop if we don't care)
-            if not (self.terminate_on_goal and self._check_goal(s)):
+            if len(np.unique(passenger_locs, axis=0)) == len(passenger_locs):
                 break
+        for i, p in enumerate(self.passengers):
+            p.position = passenger_locs[i]
+            p.in_taxi = False
+
+        # Randomly decide whether to move the taxi to a passenger
+        if self.np_random.random() > 0.5:
+            # If so, randomly choose which passenger
+            p = self.np_random.choice(self.passengers)
+            self.agent.position = p.position
+
+            # Randomly decide if that passenger should be *in* the taxi
+            if self.np_random.random() > 0.5:
+                p.in_taxi = True
+                self.passenger = p
+            else:
+                self.passenger = None
+        else:
+            # Fully randomize taxi position
+            self.agent.position = self._random_grid_position()
+            self.passenger = None
 
     def _step(self, action):
         """
