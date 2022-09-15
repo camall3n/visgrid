@@ -215,9 +215,9 @@ def test_loading_from_saved_maze():
 
 def test_loading_from_file():
     env = GridworldEnv.from_file('visgrid/envs/saved/test_3x4.txt')
-    with pytest.warns(RuntimeWarning):
-        env.reset()
+    ob, _ = env.reset()
     assert env.rows == 3 and env.cols == 4
+    assert ob.shape[0] != ob.shape[1]
 
 def test_constructing_gridworld_directly_from_grid():
     grid = Grid.generate_spiral(6, 6)

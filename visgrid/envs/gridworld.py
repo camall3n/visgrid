@@ -109,7 +109,8 @@ class GridworldEnv(gym.Env):
         self.hidden_goal = hidden_goal
         self.terminate_on_goal = terminate_on_goal
         self.should_render = should_render
-        self.dimensions = dimensions if dimensions is not None else self._default_dimensions
+        self.dimensions = (dimensions
+                           if dimensions is not None else self._default_dimensions).copy()
 
         self._initialize_agent(agent_position)
         self._initialize_depots(goal_position)
