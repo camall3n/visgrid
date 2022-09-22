@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from visgrid.envs import GridworldEnv
-from visgrid.wrappers import wrap_gridworld, NormalizeWrapper, FloatWrapper
+from visgrid.wrappers import wrap_gridworld, NormalizeWrapper, ToFloatWrapper
 
 @pytest.fixture
 def initial_agent_position():
@@ -49,7 +49,7 @@ def test_sensor_chain_produces_noisy_images(env):
 
 def test_normalized_float_wrapper():
     env = GridworldEnv(10, 10, hidden_goal=True, should_render=False)
-    env = FloatWrapper(env)
+    env = ToFloatWrapper(env)
     env = NormalizeWrapper(env)
     ob, _ = env.reset()
     assert len(ob) == 2
