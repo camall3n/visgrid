@@ -319,11 +319,16 @@ class GridworldEnv(gym.Env):
             obs = state
         return obs
 
+    def action_mask(self):
+        valid = [self.can_run(action) for action in range(self.action_space.n)]
+        return np.array(valid, dtype=np.uint8)
+
     def _get_info(self, state=None):
         if state is None:
             state = self.get_state()
         info = {
             'state': state,
+            'action_mask': self.action_mask(),
         }
         return info
 
