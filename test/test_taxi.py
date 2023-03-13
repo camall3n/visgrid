@@ -83,7 +83,7 @@ def img_env():
 
 def test_rendering(img_env):
     ob, info = img_env.reset()
-    assert ob.shape == (84, 84, 3)
+    assert ob.shape == (64, 64, 3)
     assert info['state'].shape == (6, )
 
 @pytest.fixture

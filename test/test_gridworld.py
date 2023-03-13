@@ -85,7 +85,8 @@ def env4(initial_agent_position, initial_goal_position):
                        hidden_goal=True,
                        agent_position=initial_agent_position,
                        goal_position=initial_goal_position,
-                       should_render=True)
+                       should_render=True,
+                       render_fast=False)
     env.reset()
     return env
 

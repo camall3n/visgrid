@@ -11,6 +11,14 @@ from .. import utils
 class TaxiEnv(GridworldEnv):
     INTERACT = 4
 
+    dimensions_onehot = {
+        'wall_width': 1,
+        'cell_width': 1,
+        'character_width': 1,
+        'depot_width': 1,
+        'border_widths': (0, 0),
+        'dash_width': 1,
+    }
     dimensions_5x5_to_48x48 = {
         'wall_width': 1,
         'cell_width': 7,
@@ -48,6 +56,7 @@ class TaxiEnv(GridworldEnv):
                  fixed_goal: bool = False,
                  depot_dropoff_only: bool = False,
                  should_render: bool = True,
+                 render_fast: bool = False,
                  dimensions: dict = None):
         """
         Visual taxi environment
@@ -83,7 +92,7 @@ class TaxiEnv(GridworldEnv):
         self.n_passengers = n_passengers
         self.depot_dropoff_only = depot_dropoff_only
         if size == 5:
-            self._default_dimensions = self.dimensions_5x5_to_84x84
+            self._default_dimensions = self.dimensions_5x5_to_64x64
         elif size == 10:
             self._default_dimensions = self.dimensions_10x10_to_128x128
         super().__init__(rows=size,
@@ -93,6 +102,7 @@ class TaxiEnv(GridworldEnv):
                          fixed_goal=fixed_goal,
                          hidden_goal=False,
                          should_render=should_render,
+                         render_fast=render_fast,
                          dimensions=dimensions)
 
         self.goal = None
@@ -140,7 +150,7 @@ class TaxiEnv(GridworldEnv):
         self.depot_ids = {name: id_ for id_, name in enumerate(self.depot_names)}
         self.depots = dict()
         for name in self.depot_names:
-            self.depots[name] = Depot(color=name)
+            self.depots[name] = Depot(color=name, visible=False)
             self.depots[name].position = self.depot_locs[name]
 
     def _initialize_walls(self):
@@ -197,8 +207,11 @@ class TaxiEnv(GridworldEnv):
         # Give passengers random unique goal depots
         goal_depots = copy.deepcopy(self.depot_names)
         self.np_random.shuffle(goal_depots)
+        for d in self.depots.values():
+            d.visible = False
         for p, g in zip(self.passengers, goal_depots[:self.n_passengers]):
             p.color = g
+            self.depots[g].visible = True
 
     def _reset_classic_start(self):
         # Place passengers at randomly chosen depots
@@ -244,7 +257,7 @@ class TaxiEnv(GridworldEnv):
         """
         Execute action without checking if it can run
         """
-        if action < 4:
+        if action != self.INTERACT:
             super()._step(action)
             if self.passenger is not None:
                 self.passenger.position = self.agent.position
@@ -361,8 +374,9 @@ class TaxiEnv(GridworldEnv):
 
         passenger_patches = np.zeros_like(objects['walls'])
         for p in self.passengers:
-            patch = self._render_passenger_patch(p.in_taxi, p.color)
-            self._add_patch(passenger_patches, patch, p.position)
+            if not p.in_taxi or not self.render_fast:
+                patch = self._render_passenger_patch(p.in_taxi, p.color)
+                self._add_patch(passenger_patches, patch, p.position)
 
         taxi_patches = np.zeros_like(objects['walls'])
         patch = self._render_taxi_patch()
@@ -377,6 +391,8 @@ class TaxiEnv(GridworldEnv):
 
     def _render_frame(self, content):
         """Generate a border to reflect the current in_taxi status"""
+        if self.render_fast:
+            return content
         in_taxi = (self.passenger is not None)
         img_shape = self.dimensions['img_shape']
         dw = self.dimensions['dash_width']
@@ -405,6 +421,8 @@ class TaxiEnv(GridworldEnv):
 
     def _render_passenger_patch(self, in_taxi, color):
         """Generate a patch representing a passenger, along with any associated marks"""
+        if self.render_fast:
+            return np.array([[[0, 1, 0]]])
         cell_width = self.dimensions['cell_width']
 
         patch = self._render_character_patch(color='white')
@@ -426,6 +444,8 @@ class TaxiEnv(GridworldEnv):
 
     def _render_taxi_patch(self):
         """Generate a patch representing a taxi"""
+        if self.render_fast:
+            return np.array([[[1, 0, 0]]])
         depot = self._render_depot_patch(color='white')
         passenger = self._render_character_patch('white')
         patch = np.ones_like(depot) - (depot + passenger)

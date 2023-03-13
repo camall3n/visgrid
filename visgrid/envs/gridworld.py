@@ -74,6 +74,7 @@ class GridworldEnv(gym.Env):
                  agent_position: Tuple = None,
                  goal_position: Tuple = None,
                  should_render: bool = True,
+                 render_fast: bool = True,
                  dimensions: dict = None):
         """
         Visual gridworld environment
@@ -109,8 +110,14 @@ class GridworldEnv(gym.Env):
         self.hidden_goal = hidden_goal
         self.terminate_on_goal = terminate_on_goal
         self.should_render = should_render
-        self.dimensions = (dimensions
-                           if dimensions is not None else self._default_dimensions).copy()
+        self.render_fast = render_fast
+        if dimensions is not None:
+            self.dimensions = dimensions
+        elif self.render_fast:
+            self.dimensions = self.dimensions_onehot
+        else:
+            self.dimensions = self._default_dimensions
+        self.dimensions = self.dimensions.copy()
 
         self._initialize_agent(agent_position)
         self._initialize_depots(goal_position)
@@ -158,7 +165,7 @@ class GridworldEnv(gym.Env):
     def _initialize_depots(self, position=None):
         if position is None:
             position = self._random_grid_position()
-        self.goal = Depot(position, color='red')
+        self.goal = Depot(position, color='red', visible=True)
         self.depots = {'red': self.goal}
 
     # ------------------------------------------------------------
@@ -384,7 +391,8 @@ class GridworldEnv(gym.Env):
         frame = self._render_frame(content)
         image = self._render_composite_image(frame, content)
 
-        image = self._resize_if_necessary(image, self.dimensions['img_shape'])
+        if not self.render_fast:
+            image = self._resize_if_necessary(image, self.dimensions['img_shape'])
         return image
 
     def _resize_if_necessary(self, image, desired_shape):
@@ -421,8 +429,9 @@ class GridworldEnv(gym.Env):
 
         depot_patches = np.zeros_like(walls)
         for depot in self.depots.values():
-            patch = self._render_depot_patch(depot.color)
-            self._add_patch(depot_patches, patch, depot.position)
+            if depot.visible:
+                patch = self._render_depot_patch(depot.color)
+                self._add_patch(depot_patches, patch, depot.position)
 
         agent_patches = np.zeros_like(walls)
         patch = self._render_character_patch()
@@ -440,6 +449,8 @@ class GridworldEnv(gym.Env):
 
     def _render_depot_patch(self, color) -> np.ndarray:
         """Generate a patch representing a depot"""
+        if self.render_fast:
+            return np.array([[[0, 0, 1]]])
         cell_width = self.dimensions['cell_width']
         depot_width = self.dimensions['depot_width']
         assert depot_width <= cell_width // 2
