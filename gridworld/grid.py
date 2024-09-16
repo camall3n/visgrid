@@ -29,7 +29,6 @@ class BaseGrid:
 
         # Add rows and columns for walls between cells
         self._grid = np.ones([rows * 2 + 1, cols * 2 + 1], dtype=grid_type)
-        self._contents = np.empty([rows * 2 + 1, cols * 2 + 1], dtype=np.object)
         self.saved_directions = {}
 
         # Reset valid positions and walls
@@ -40,9 +39,6 @@ class BaseGrid:
         if seed is not None:
             seeding.seed(seed, np)
         return np.asarray((np.random.randint(0, self._rows), np.random.randint(0, self._cols)))
-
-    def contents(self, row, col):
-        return self._contents[row // 2, col // 2]
 
     def plot(self, ax=None, draw_bg_grid=True):
         scale = 3 / 5
@@ -105,4 +101,3 @@ class BaseGrid:
         self._rows = r // 2
         self._cols = c // 2
         self._grid = grid
-        self._contents = np.empty_like(self._grid, dtype=np.object)
